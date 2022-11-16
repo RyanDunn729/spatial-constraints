@@ -77,7 +77,7 @@ for i,rng in enumerate(max_rngs):
     locs = np.vstack((locs,xspan[ind]))  
 
 ax2.plot(xspan,phi_ex,'--',linewidth=2,label='Exact SDF')
-ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Discontinuities')
+ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Non-Differentiable Points')
 ax2.set_xlabel('x')
 ax2.set_ylabel('$\phi$')
 ax2.set_xticks(xticks)
@@ -85,7 +85,7 @@ ax2.set_yticks(yticks)
 ax2.set_ylim(-7,2)
 ax2.legend(loc='lower center',framealpha=1,edgecolor='black',facecolor='white')
 
-ax1.plot(locs,np.mean(y)*np.ones(len(locs)),'.',color='tab:red',markersize=15,label='Discontinuities')
+ax1.plot(locs,np.mean(y)*np.ones(len(locs)),'.',color='tab:red',markersize=15,label='Non-Differentiable Points')
 ax1.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white') #,
     # bbox_transform=fig.transFigure)
 # ax1.axis('equal')
