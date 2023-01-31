@@ -19,19 +19,19 @@ def evaluate(pts,KDTree,norm_vec,curv,k,rho):
     phi = np.einsum('ijk,ijk,ij,i->i',Dx,norm_vec[indices],exp,1/np.sum(exp,axis=1))
     return phi
 
-# mode = 'gen_data'
+mode = 'gen_data'
 # mode = 'plot_data'
-mode = 'Bspline_analysis_vary_L1'
-mode = 'Bspline_analysis_vary_L2'
+# mode = 'Bspline_analysis_vary_L1'
+# mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
-mode = 'Visualize_lambdas'
+# mode = 'Visualize_lambdas'
 # mode = 'Visualize_lambda-contours'
 # mode = 'Visualize_lambda-slices'
 
 # shape = 'ellipse'
-# shape = 'rectangle'
+shape = 'rectangle'
 # shape = 'multi-circles'
-shape = 'multi-obj'
+# shape = 'multi-obj'
 
 max_cps = 74
 # max_cps = 140

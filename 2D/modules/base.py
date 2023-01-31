@@ -114,7 +114,7 @@ class MyProblem(object):
         exp = np.exp(-rho*d_norm)
         Dx = dataset.data[indices] - np.reshape(cps[:,0:2],(np.product(self.num_cps),1,2))
         phi = np.einsum('ijk,ijk,ij,i->i',Dx,self.exact[1][indices],exp,1/np.sum(exp,axis=1))
-        phi += 1e-14*(2*np.random.rand(np.product(self.num_cps))-1)
+        phi += 1e-5*(2*np.random.rand(np.product(self.num_cps))-1)
         cps[:,2] = phi/self.Bbox_diag
         return cps
 

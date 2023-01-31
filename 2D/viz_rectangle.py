@@ -20,6 +20,7 @@ plt.rc('legend', fontsize=12)    # legend fontsize
 plt.rc('axes', labelsize=18)    # fontsize of the x and y labels
 
 Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/_Saved_Rectangle.pkl", "rb" ) )
 
 gold = (198/255, 146/255, 20/255)
 blue = (24/255, 43/255, 73/255)
@@ -66,8 +67,8 @@ ax.clabel(CS, CS.levels, inline=True, fontsize=14, fmt={-1:'-1',0:'',1:'1',2:'2'
 ax.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',label='Surface Points')
 ax.set_xlabel('x')
 ax.set_ylabel('y')
-ax.set_xticks(np.arange(-10,5,1))
-ax.set_yticks(np.arange(-10,10,1))
+ax.set_xticks(np.arange(-4,5,1))
+ax.set_yticks(np.arange(-4,5,1))
 ax.set_xlim(1.25*Func.dimensions[0,0], 2.5*Func.dimensions[0,1])
 ax.set_ylim(Func.dimensions[1,0], Func.dimensions[1,1])
 sns.despine()
@@ -97,7 +98,7 @@ fig2 = plt.figure(figsize=(7,5),dpi=140)
 ax = plt.axes()
 dataset = KDTree(Func.surf_pts)
 samples = np.transpose(np.vstack((xx.flatten(),yy.flatten())))
-phi = KS_eval(samples,dataset,Func.normals,k=6,rho=10)
+phi = KS_eval(samples,dataset,Func.normals,k=6,rho=20)
 phi = phi.reshape(res,res)
 CS = ax.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
     colors=['tab:orange','tab:green','tab:blue','tab:purple'])
@@ -117,8 +118,8 @@ ax.clabel(CS, CS.levels, inline=True, fontsize=14, fmt={-1:'-1',0:'',1:'1',2:'2'
 ax.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',label='Surface Points')
 ax.set_xlabel('x')
 ax.set_ylabel('y')
-ax.set_xticks(np.arange(-10,5,1))
-ax.set_yticks(np.arange(-10,10,1))
+ax.set_xticks(np.arange(-4,5,1))
+ax.set_yticks(np.arange(-4,5,1))
 ax.set_xlim(1.25*Func.dimensions[0,0], 2.5*Func.dimensions[0,1])
 ax.set_ylim(Func.dimensions[1,0], Func.dimensions[1,1])
 sns.despine()

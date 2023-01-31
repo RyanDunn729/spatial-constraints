@@ -23,7 +23,7 @@ y = [-9,6]
 
 xticks = [0]
 yticks = [0]
-fig = plt.figure(figsize=(5,6), dpi=160)
+fig = plt.figure(figsize=(8,8), dpi=120)
 ax1 = plt.subplot(2,1,1)
 res = 300
 xx,yy = np.meshgrid(np.linspace(x[0],x[1],res),
@@ -31,7 +31,7 @@ xx,yy = np.meshgrid(np.linspace(x[0],x[1],res),
 pts = np.stack((xx.flatten(),yy.flatten()),axis=1)
 phi,_ = Hicken_eval(pts,KDTree(Func.exact[0]),Func.exact[1],15,10)
 phi = phi.reshape(res,res)
-ax1.pcolormesh(xx,yy,phi,shading='gouraud',cmap='RdYlGn', vmin=-5, vmax=5)
+ax1.pcolormesh(xx,yy,phi,shading='gouraud',cmap='Greys', vmin=-5, vmax=5)
 for i in range(4):
     rng = np.arange(10000*i,10000*(i+1)-1)
     if i==0:
@@ -50,7 +50,7 @@ sns.despine()
 
 ax2 = plt.subplot(2,1,2,sharex=ax1)
 sns.set()
-res = int(1000*np.diff(x))
+res = int(500)
 xspan = np.linspace(x[0],x[1],res)
 yspan = np.zeros(res)
 pts = np.stack((xspan,yspan),axis=1)
@@ -77,16 +77,16 @@ for rng in max_rngs:
     locs = np.vstack((locs,xspan[ind]))  
 
 ax2.plot(xspan,phi_ex,'--',linewidth=2,label='Exact SDF')
-ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Non-Differentiable Points')
+ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Non-Differentiable Pts')
 ax2.set_xlabel('x')
 ax2.set_ylabel('$\phi$')
 ax2.set_xticks(xticks)
 ax2.set_yticks(yticks)
 # ax2.set_xlim(x[0],x[1])
-ax2.legend(loc='lower center',framealpha=1,edgecolor='black',facecolor='white')
+ax2.legend(loc='lower center',framealpha=1,edgecolor='black',facecolor='white', fontsize="x-large")
 
-ax1.plot(locs,np.zeros(len(locs)),'.',color='tab:red',markersize=15,label='Non-Differentiable Points')
-ax1.legend(loc='upper right',framealpha=1,edgecolor='black',facecolor='white')
+ax1.plot(locs,np.zeros(len(locs)),'.',color='tab:red',markersize=15,label='Non-Differentiable Pts')
+ax1.legend(loc='lower left',framealpha=1,edgecolor='black',facecolor='white', fontsize="x-large")
 ax2.grid()
 sns.despine()
 plt.tight_layout()
@@ -99,4 +99,4 @@ plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
 plt.savefig('PDF_figures/multi_circles.pdf',bbox_inches='tight') 
  
-# plt.show()
+plt.show()

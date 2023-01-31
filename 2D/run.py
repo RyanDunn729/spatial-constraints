@@ -18,28 +18,30 @@ print('Imported Packages \n')
 ######### Configurables #########
 dim = 2
 order = 4
-R = 1.5
-max_cps = 96
-border = 0.25
+R = 1
+max_cps = 64
+border = 0.3
 
 soft_const = True
-L1 = 1.
-L2 = 100.
-L3 = 1.
+L1 = 2e-2
+L2 = 10.
+L3 = 100.
 
 tol = 1e-4
 
 prev_filename = None
-prev_filename = "SAVED_DATA/Opt_rectangle_L2_1.pkl"
+# prev_filename = "SAVED_DATA/Opt_rectangle_L2_1.pkl"
 # prev_filename = "_Saved_Function.pkl"
 
 visualize_init = False
 ######### Get Contour #########
-num_surf_pts = 100
+# 72 is even
+# 76 is slightly off
+num_surf_pts = 76
 a = 5
 b = 7
-centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
-radii = [2.,2.,4.,3.]
+# centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
+# radii = [2.,2.,4.,3.]
 
 ### Choose shape ###
 # e = ellipse(a,b)

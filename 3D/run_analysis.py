@@ -13,20 +13,24 @@ import numpy as np
 import pickle
 import time
 
-def set_fonts():
+def set_fonts(legendfont=12,axesfont=16):
     from matplotlib import rc
     rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     rc('text', usetex=True)
-    plt.rc('legend', fontsize=12)    # legend fontsize
-    plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
+    plt.rc('legend', fontsize=legendfont)    # legend fontsize
+    plt.rc('axes', labelsize=axesfont)    # fontsize of the x and y labels
     return
 
 sns.set()
 set_fonts()
 
+save_figures = True
+
 ### Select Shape ###
 # Penalization
-file = 'o4Bunny_pen35'
+# file = 'o3Bunny_pen40'
+# file = 'o4Bunny_pen35'
+file = 'o4Bunny_pen40'
 # file = 'o5Bunny_pen40'
 # file = 'o6Bunny_pen40' 
 # file = 'o4Bunny_pen34'
@@ -43,28 +47,29 @@ file = 'o4Bunny_pen35'
 
 ### Plot Data Mode ###
 # mode = 'Hicken_analysis'
-# mode = 'Bspline_analysis'
+mode = 'Bspline_analysis'
 # mode = 'Bspline_analysis_vary_L1'
 # mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
-mode = 'Visualize_lambdas_energies'
-mode = 'Visualize_lambdas'
+# mode = 'Visualize_lambdas_energies'
+# mode = 'Visualize_lambdas'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
 mode = 'Hicken_v_Splines'
-# mode = 'Comp_time'
+mode = 'normalized_Hicken_v_Splines'
+mode = 'Comp_time'
 print(mode)
 
 # BSpline Volume Parameters #
 dim = 3
-R = 2
+R = 1
 order = int(file[1])
 border = 0.15
 max_cps = int(file[-2:])
-soft_const = False 
+soft_const = True
 iter = 1
-L = [1., 1., 1.]
+L = [1e-2, 10., 100.]
 # iter = 2
 # L = [1e-1, 1e0, 1e5]
 # iter = 3
@@ -624,7 +629,7 @@ if mode == 'Comp_err_order':
     # Bunny ONLY
     pt_data_pen = [77,108,201,252,412,677,1002,2002,3002,4002,5002,10002] #,25002,40802,63802,100002]
 
-    orders = ['o4','o5','o6']
+    orders = ['o3','o4','o5']
 
     max_err_pen = np.zeros((len(orders),len(pt_data_pen)))
     RMS_err_pen = np.zeros((len(orders),len(pt_data_pen)))
@@ -657,20 +662,15 @@ if mode == 'Hicken_v_Splines':
 
     ep_data = [0.5, 1]
     k = 20
-    rho = 10
+    rho = 20
+    num_samples = 10000
     bunny_exact = pickle.load( open( "SAVED_DATA/_Bunny_data_exact_.pkl", "rb" ) )
     exact_dataset = KDTree(bunny_exact[0])
-    down_exact_pts = bunny_exact[0]
-    down_exact_nrm = bunny_exact[1]
-    while len(down_exact_nrm) > 100000:
-        down_exact_pts = down_exact_pts[::2]
-        down_exact_nrm = down_exact_nrm[::2]
-    down_down_exact_pts = bunny_exact[0]
-    down_down_exact_nrm = bunny_exact[1]
-    while len(down_down_exact_nrm) > 1000:
-        down_down_exact_pts = down_down_exact_pts[::2]
-        down_down_exact_nrm = down_down_exact_nrm[::2]
-    pt_data = [77,108,201,252,412,677,1002,2002,3002,4002,5002,10002] #,25002,40802,63802,100002]
+    np.random.seed(1)
+    indx = np.random.randint(np.size(bunny_exact[0],0), size=num_samples)
+    down_exact_pts = bunny_exact[0][indx,:]
+    down_exact_nrm = bunny_exact[1][indx,:]
+    pt_data = [252,412,677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
 
     RMS_err_Bsplines_fine = np.zeros(len(pt_data))
     RMS_err_KSmethod = np.zeros(len(pt_data))
@@ -686,10 +686,8 @@ if mode == 'Hicken_v_Splines':
         RMS_err_KSmethod[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
 
         for j,ep in enumerate(ep_data):
-            i_pts1 = bunny_exact[0] + ep/100 * Func.Bbox_diag * bunny_exact[1]
-            i_pts2 = bunny_exact[0] - ep/100 * Func.Bbox_diag * bunny_exact[1]
-            # i_pts1 = down_down_exact_pts + ep/100 * Func.Bbox_diag * down_down_exact_nrm
-            # i_pts2 = down_down_exact_pts - ep/100 * Func.Bbox_diag * down_down_exact_nrm
+            i_pts1 = down_exact_pts + ep/100 * Func.Bbox_diag * down_exact_nrm
+            i_pts2 = down_exact_pts - ep/100 * Func.Bbox_diag * down_exact_nrm
 
             i_pts = np.vstack((i_pts1,i_pts2))
             phi_ex,_ = exact_dataset.query(i_pts,k=1)
@@ -702,116 +700,130 @@ if mode == 'Hicken_v_Splines':
     ##################################################################
 
     sns.set(style='ticks')
+    set_fonts()
     fig1 = plt.figure(figsize=(5,5),dpi=160)
-    ax2 = plt.axes()
-    ax2.loglog(pt_data,RMS_err_Bsplines_fine,'.-',color='tab:blue',markersize=14,linewidth=2,label=('Our Method'))
-    ax2.loglog(pt_data,RMS_err_KSmethod,'.--',color='tab:orange',markersize=14,linewidth=2,label=('Explicit Method'))
-    ax2.set_xlabel('$N_{\Gamma}$',fontsize=14)
-    ax2.set_ylabel('RMS Error',fontsize=14)
-    ax2.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
-    ax2.set_ylim(2.5e-4,3e-2)
-    ax2.grid()
+    ax1 = plt.axes()
+    ax1.loglog(pt_data,RMS_err_Bsplines_fine,'.-',color='tab:blue',markersize=14,linewidth=2,label=('Our Method'))
+    ax1.loglog(pt_data,RMS_err_KSmethod,'.--',color='tab:orange',markersize=14,linewidth=2,label=('Explicit Method'))
+    ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
+    ax1.set_ylabel('RMS Error',fontsize=14)
+    ax1.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
+    ax1.set_ylim(2e-5,2e-2)
+    ax1.grid()
     sns.despine()
     plt.tight_layout()
-    set_fonts()
-    plt.savefig('PDF_figures/EXvBa.pdf',bbox_inches='tight')
+    if save_figures:
+        plt.savefig('PDF_figures/EXvBa.pdf',bbox_inches='tight')
 
     sns.set(style='ticks')
+    set_fonts(legendfont=12,axesfont=18)
     fig2 = plt.figure(figsize=(5,5),dpi=160)
-    ax3 = plt.axes()
+    ax2 = plt.axes()
     styles_bspline = ['.-','s-']
     styles_KSmethod = ['.--','s--']
     for i,ep in enumerate(ep_data):
         if i==0:
-            ax3.loglog(pt_data,ep_error_Bsplines[:,i],styles_bspline[i],markersize=14,linewidth=2,color='tab:blue',
+            ax2.loglog(pt_data,ep_error_Bsplines[:,i],styles_bspline[i],markersize=14,linewidth=2,color='tab:blue',
                 label=('Our method ($\pm${})'.format(ep/100)))
         elif i==1:
-            ax3.loglog(pt_data,ep_error_Bsplines[:,i],styles_bspline[i],markersize=7,linewidth=2,color='tab:blue',
+            ax2.loglog(pt_data,ep_error_Bsplines[:,i],styles_bspline[i],markersize=7,linewidth=2,color='tab:blue',
                 label=('Our method ($\pm${})'.format(ep/100)))
     for i,ep in enumerate(ep_data):
         if i==0:
-            ax3.loglog(pt_data,ep_error_KSmethod[:,i],styles_KSmethod[i],markersize=14,linewidth=2,color='tab:orange',
+            ax2.loglog(pt_data,ep_error_KSmethod[:,i],styles_KSmethod[i],markersize=14,linewidth=2,color='tab:orange',
                 label=('Explicit method ($\pm${})'.format(ep/100)))
         elif i==1:
-            ax3.loglog(pt_data,ep_error_KSmethod[:,i],styles_KSmethod[i],markersize=7,linewidth=2,color='tab:orange',
+            ax2.loglog(pt_data,ep_error_KSmethod[:,i],styles_KSmethod[i],markersize=7,linewidth=2,color='tab:orange',
                 label=('Explicit method ($\pm${})'.format(ep/100)))
-    ax3.set_xlabel('$N_{\Gamma}$',fontsize=14)
-    ax3.set_ylabel('RMS Error',fontsize=14)
-    ax3.set_ylim(2.5e-4,3e-2)
-    ax3.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
-    ax3.grid()
+    ax2.set_xlabel('$N_{\Gamma}$',fontsize=14)
+    ax2.set_ylabel('RMS Error',fontsize=14)
+    ax2.set_ylim(9e-5,2e-2)
+    ax2.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
+    ax2.grid()
     sns.despine()
     plt.tight_layout()
-    set_fonts()
-    plt.savefig('PDF_figures/EXvBb.pdf',bbox_inches='tight')
+    if save_figures:
+        plt.savefig('PDF_figures/EXvBb.pdf',bbox_inches='tight')
 
+    # print("RMS Bsplines")
+    # print(RMS_err_Bsplines_fine)
+    # print("RMS Hicken")
+    # print(RMS_err_KSmethod)
+    
 if mode == 'Comp_time':
     ep_data = [0.5, 1.0]
-    k = 30
-    rho = 10
+    k = 40
+    rho = 20
+    num_samples = 2000
     bunny_exact = pickle.load( open( "SAVED_DATA/_Bunny_data_exact_.pkl", "rb" ) )
     down_exact_pts = bunny_exact[0][::2]
     down_exact_nrm = bunny_exact[1][::2]
 
-    down_down_exact_pts = bunny_exact[0]
-    down_down_exact_nrm = bunny_exact[1]
-    while len(down_down_exact_nrm) > 1000:
-        down_down_exact_pts = down_down_exact_pts[::2]
-        down_down_exact_nrm = down_down_exact_nrm[::2]
-    pt_data = np.array([77,108,201,252,412,677,1002,2002,3002,4002,5002,10002]) #,25002,40802,63802,100002]
+    np.random.seed(1)
+    indx = np.random.randint(np.size(bunny_exact[0],0), size=num_samples)
+    down_exact_pts = bunny_exact[0][indx,:]
+    down_exact_nrm = bunny_exact[1][indx,:]
+    pt_data = [252,412,677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
 
-    RMS_err_Bsplines_fine = np.zeros(len(pt_data))
-    RMS_err_KSmethod = np.zeros(len(pt_data))
-    time_KSmethod = np.zeros(len(pt_data))
-    time_Bsplines_1000 = np.zeros(len(pt_data))
-    time_FredMethod = np.zeros(len(pt_data))
-    ep_error_KSmethod = np.zeros((len(pt_data),len(ep_data)))
-    ep_error_Bsplines = np.zeros((len(pt_data),len(ep_data)))
-    for i,num_pts in enumerate(pt_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_"+str(num_pts)+".pkl", "rb" ) )
-        t1 = time.perf_counter()
-        phi = Func.eval_pts(down_exact_pts)
-        t2 = time.perf_counter()
-        time_Bsplines_1000[i] = (t2-t1) / len(phi)
+    # RMS_err_Bsplines_fine = np.zeros(len(pt_data))
+    # RMS_err_KSmethod = np.zeros(len(pt_data))
+    # time_KSmethod = np.zeros(len(pt_data))
+    # time_Bsplines_1000 = np.zeros(len(pt_data))
+    # time_FredMethod = np.zeros(len(pt_data))
+    # ep_error_KSmethod = np.zeros((len(pt_data),len(ep_data)))
+    # ep_error_Bsplines = np.zeros((len(pt_data),len(ep_data)))
+    # for i,num_pts in enumerate(pt_data):
+    #     Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_"+str(num_pts)+".pkl", "rb" ) )
+    #     t1 = time.perf_counter()
+    #     phi = Func.eval_pts(down_exact_pts)
+    #     t2 = time.perf_counter()
+    #     time_Bsplines_1000[i] = (t2-t1) / len(phi)
 
-        t1 = time.perf_counter()
-        f = Freds_Method(down_down_exact_pts,Func.surf_pts,Func.normals)
-        t2 = time.perf_counter()
-        time_FredMethod[i] = (t2-t1) / len(down_down_exact_pts)
+    #     t1 = time.perf_counter()
+    #     f = Freds_Method(down_exact_pts,Func.surf_pts,Func.normals)
+    #     t2 = time.perf_counter()
+    #     time_FredMethod[i] = (t2-t1) / len(down_exact_pts)
 
-        dataset = KDTree(Func.surf_pts)
-        t1 = time.perf_counter()
-        phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)
-        t2 = time.perf_counter()
-        time_KSmethod[i] = (t2-t1) / len(phi)
+    #     dataset = KDTree(Func.surf_pts)
+    #     t1 = time.perf_counter()
+    #     phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)
+    #     t2 = time.perf_counter()
+    #     time_KSmethod[i] = (t2-t1) / len(phi)
 
-        print('finished ng={}'.format(num_pts))
+    #     print('finished ng={}'.format(num_pts))
     
+    time_Bsplines_1000 = [3.66625e-06,2.88745e-06,3.03260e-06,2.82635e-06,2.77640e-06,3.01960e-06,
+        3.11460e-06,2.92115e-06,2.94500e-06,3.05460e-06,3.09575e-06,3.25665e-06,2.64320e-06]
+    time_KSmethod = [7.564250e-06,7.081200e-06,6.931800e-06,7.282700e-06,8.335100e-06,
+        7.654400e-06,7.553100e-06,7.468300e-06,7.896700e-06,8.100350e-06,
+        9.152785e-06,8.331000e-06,9.393050e-06]
+    time_FredMethod = [2.85195500e-05,4.47207000e-05,6.82422000e-05,1.00678750e-04,
+        2.05626600e-04,3.19813600e-04,4.11701150e-04,5.57543150e-04,
+        1.00118260e-03,2.50914620e-03,4.08993435e-03,6.66776455e-03,
+        1.09231676e-02]
 
-    P_OM = np.polyfit(pt_data,time_Bsplines_1000,1)
-    P_EM = np.polyfit(np.log10(pt_data),time_KSmethod,1)
-    P_CM = np.polyfit(pt_data,time_FredMethod,1)
+    P_OM = np.polyfit(np.log(pt_data),np.log(time_Bsplines_1000),1)
+    P_EM = np.polyfit(np.log(pt_data),np.log(time_KSmethod),1)
+    P_CM = np.polyfit(np.log(pt_data),np.log(time_FredMethod),1)
 
     bf_OM = np.poly1d(P_OM)
     bf_EM = np.poly1d(P_EM)
     bf_CM = np.poly1d(P_CM)
 
     sns.set(style='ticks')
-    fig = plt.figure(figsize=(6,5),dpi=240)
+    fig = plt.figure(figsize=(5.2,5),dpi=160)
     ax1 = plt.axes()
-    ax1.loglog(pt_data,bf_OM(pt_data),          'k-',linewidth=6,alpha=0.2)
-    ax1.loglog(pt_data,bf_EM(np.log10(pt_data)),'k-',linewidth=6,alpha=0.2)
-    ax1.loglog(pt_data,bf_CM(pt_data),          'k-',linewidth=6,alpha=0.2)
+    ax1.loglog(pt_data,np.exp(bf_OM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
+    ax1.loglog(pt_data,np.exp(bf_EM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
+    ax1.loglog(pt_data,np.exp(bf_CM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
 
     ax1.loglog(pt_data,time_Bsplines_1000,'.-',label=('Our Method'),color='tab:blue',markersize=10,linewidth=2)
     ax1.loglog(pt_data,time_KSmethod,'.:',label=('Explicit Method'),color='tab:orange',markersize=10,linewidth=2)
     ax1.loglog(pt_data,time_FredMethod,'.--',label=('Previous Method'),color='tab:green',markersize=10,linewidth=2)
 
-    ax1.loglog(pt_data,bf_OM(pt_data),'k-',linewidth=6,alpha=0.2,label='Ideal',zorder=2)
-
-    plt.text(2.5e3,8e-6,'$\mathcal{O}(k$log$(N_{\Gamma}))$',fontsize=14)
-    plt.text(5e3,3.5e-6,'$\mathcal{O}(n^3)$',            fontsize=14)
-    plt.text(2e3,5e-4,'$\mathcal{O}(N_{\Gamma})$',        fontsize=14)
+    plt.text(1.5e3,5e-4,'$\mathcal{O}(N_{\Gamma})$',        fontsize=14)
+    plt.text(1.7e4,1.2e-5,'$\mathcal{O}(k$log$(N_{\Gamma}))$',fontsize=14)
+    plt.text(5e4,4e-6,'$\mathcal{O}(1)$',            fontsize=14)
 
     ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
     ax1.set_ylabel('Evaluation Time per point (sec)',fontsize=14)
@@ -823,5 +835,102 @@ if mode == 'Comp_time':
     set_fonts()
 
     plt.savefig('PDF_figures/Comp_time.pdf',bbox_inches='tight')
+
+if mode == 'normalized_Hicken_v_Splines':
+
+    ep_data = [0.5, 1]
+    k = 20
+    rho = 20
+    num_samples = 10000
+    bunny_exact = pickle.load( open( "SAVED_DATA/_Bunny_data_exact_.pkl", "rb" ) )
+    exact_dataset = KDTree(bunny_exact[0])
+    np.random.seed(1)
+    indx = np.random.randint(np.size(bunny_exact[0],0), size=num_samples)
+    down_exact_pts = bunny_exact[0][indx,:]
+    down_exact_nrm = bunny_exact[1][indx,:]
+    pt_data = [252,412,677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
+
+    RMS_err_Bsplines_fine = np.zeros(len(pt_data))
+    RMS_err_KSmethod = np.zeros(len(pt_data))
+    ep_error_KSmethod = np.zeros((len(pt_data),len(ep_data)))
+    ep_error_Bsplines = np.zeros((len(pt_data),len(ep_data)))
+    Hicken_normalizer = np.zeros(len(pt_data))
+    for i,num_pts in enumerate(pt_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_"+str(num_pts)+".pkl", "rb" ) )
+        normalizer = np.linalg.norm(np.diff(Func.dimensions).flatten()/Func.num_cps)
+        phi = Func.eval_pts(down_exact_pts)
+        RMS_err_Bsplines_fine[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+
+        dataset = KDTree(Func.surf_pts)
+        runsum = 0
+        all_dh,_ = dataset.query(Func.surf_pts,k=2)
+        Hicken_normalizer[i] = np.mean(all_dh[:,1])
+        phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)
+        RMS_err_KSmethod[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+
+        for j,ep in enumerate(ep_data):
+            i_pts1 = down_exact_pts + ep/100 * Func.Bbox_diag * down_exact_nrm
+            i_pts2 = down_exact_pts - ep/100 * Func.Bbox_diag * down_exact_nrm
+
+            i_pts = np.vstack((i_pts1,i_pts2))
+            phi_ex,_ = exact_dataset.query(i_pts,k=1)
+            phi = Func.eval_pts(i_pts)
+            ep_error_Bsplines[i,j] = np.sqrt(np.mean( (abs(phi)-phi_ex)**2 ))/Func.Bbox_diag
+            phi = KS_eval(i_pts,dataset,Func.normals,k,rho)
+            ep_error_KSmethod[i,j] = np.sqrt(np.mean( (abs(phi)-phi_ex)**2 ))/Func.Bbox_diag
+        print('finished ng={}'.format(num_pts))
+
+    ##################################################################
+
+    sns.set(style='ticks')
+    set_fonts()
+    fig1 = plt.figure(figsize=(5.2,5),dpi=160)
+    ax1 = plt.axes()
+    ax1.loglog(pt_data,RMS_err_Bsplines_fine/normalizer,'.-',color='tab:blue',markersize=14,linewidth=2,label=('Our Method'))
+    ax1.loglog(pt_data,RMS_err_KSmethod/Hicken_normalizer,'.--',color='tab:orange',markersize=14,linewidth=2,label=('Explicit Method'))
+    ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
+    ax1.set_ylabel('Normalized RMS Error',fontsize=14)
+    ax1.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
+    ax1.set_ylim(8e-6,2e-2)
+    ax1.grid()
+    sns.despine()
+    plt.tight_layout()
+    if save_figures:
+        plt.savefig('PDF_figures/normalized_EXvBa.pdf',bbox_inches='tight')
+
+    sns.set(style='ticks')
+    set_fonts(legendfont=12,axesfont=18)
+    fig2 = plt.figure(figsize=(5.2,5),dpi=160)
+    ax2 = plt.axes()
+    styles_bspline = ['.-','s-']
+    styles_KSmethod = ['.--','s--']
+    for i,ep in enumerate(ep_data):
+        if i==0:
+            ax2.loglog(pt_data,ep_error_Bsplines[:,i]/normalizer,styles_bspline[i],markersize=14,linewidth=2,color='tab:blue',
+                label=('Our method ($\pm${})'.format(ep/100)))
+        elif i==1:
+            ax2.loglog(pt_data,ep_error_Bsplines[:,i]/normalizer,styles_bspline[i],markersize=7,linewidth=2,color='tab:blue',
+                label=('Our method ($\pm${})'.format(ep/100)))
+    for i,ep in enumerate(ep_data):
+        if i==0:
+            ax2.loglog(pt_data,ep_error_KSmethod[:,i]/Hicken_normalizer,styles_KSmethod[i],markersize=14,linewidth=2,color='tab:orange',
+                label=('Explicit method ($\pm${})'.format(ep/100)))
+        elif i==1:
+            ax2.loglog(pt_data,ep_error_KSmethod[:,i]/Hicken_normalizer,styles_KSmethod[i],markersize=7,linewidth=2,color='tab:orange',
+                label=('Explicit method ($\pm${})'.format(ep/100)))
+    ax2.set_xlabel('$N_{\Gamma}$',fontsize=14)
+    ax2.set_ylabel('Normalized RMS Error',fontsize=14)
+    ax2.set_ylim(8e-6,2e-2)
+    ax2.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
+    ax2.grid()
+    sns.despine()
+    plt.tight_layout()
+    if save_figures:
+        plt.savefig('PDF_figures/normalized_EXvBb.pdf',bbox_inches='tight')
+
+    # print("RMS Bsplines")
+    # print(RMS_err_Bsplines_fine)
+    # print("RMS Hicken")
+    # print(RMS_err_KSmethod)
 
 plt.show()

@@ -26,14 +26,18 @@ class Fnorm(ExplicitComponent):
     def compute_partials(self,inputs,partials):
         dim = self.options['dim']
         norm = np.linalg.norm(inputs['hessians'],axis=(1,2),ord='fro')
+        import time
+        t1 = time.time()
         for i,hess in enumerate(inputs['hessians']):
             partials['Fnorm','hessians'][i*dim**2:(i+1)*dim**2] = hess.flatten()/norm[i]
+        t2 = time.time()
+        print(t2-t1)
 
 if __name__ == '__main__':
     from openmdao.api import Problem, Group
     import numpy as np
 
-    num_pts = 500
+    num_pts = 100
     dim = 3
 
     group = Group()

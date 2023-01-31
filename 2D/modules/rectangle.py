@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     w = 5
     h = 7
-    num_pts = 50
+    num_pts = 78
 
     r = rectangle(w,h)
     

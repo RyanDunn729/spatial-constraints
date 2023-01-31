@@ -18,14 +18,14 @@ print('Imported Packages \n')
 
 ######### Configurables #########
 dim = 3
-R = 2
+R = 1
 order = 4
 border = 0.15
 
 soft_const = True
-L1 = 1e-1 # Curvature weighting
-L2 = 1e0  # Surface weighting
-L3 = 8e-1 # Local weighting
+L1 = 1e-2 # Curvature weighting
+L2 = 1e1  # Surface weighting
+L3 = 1e2 # Local weighting
 
 ### Fuselage ###
 # max_cps = 47
@@ -38,9 +38,9 @@ L3 = 8e-1 # Local weighting
 # tol = 1e-5
 
 ### BUNNY ###
-# max_cps = 41
-# flag = 'Bunny'
-# tol = 1e-5
+max_cps = 42
+flag = 'Bunny'
+tol = 1e-5
 
 ### HEART ###
 # max_cps = 47
@@ -51,14 +51,14 @@ L3 = 8e-1 # Local weighting
 # max_cps = 42
 # flag = 'Ellipsoid'
 # tol = 1e-5
-num_pts = 500
-a = 8
-b = 7.25
-c = 5.75
+# num_pts = 500
+# a = 8
+# b = 7.25
+# c = 5.75
 
 visualize_init = False
 
-# filename_exact = 'stl-files/Bunny.stl'     # 129951 vertices
+filename_exact = 'stl-files/Bunny.stl'     # 129951 vertices
 # filename = 'stl-files/Bunny_77.stl'
 # filename = 'stl-files/Bunny_108.stl'
 # filename = 'stl-files/Bunny_252.stl'
@@ -71,7 +71,7 @@ visualize_init = False
 # filename = 'stl-files/Bunny_1002.stl'
 # filename = 'stl-files/Bunny_5002.stl'
 # filename = 'stl-files/Bunny_10002.stl'
-# filename = 'stl-files/Bunny_25002.stl'
+filename = 'stl-files/Bunny_25002.stl'
 # filename = 'stl-files/Bunny_40802.stl'
 # filename = 'stl-files/Bunny_63802.stl'
 # filename = 'stl-files/Bunny_100002.stl'
@@ -87,13 +87,13 @@ visualize_init = False
 
 # filename = 'stl-files/wing.stl'
 
-filename = 'stl-files/dragon_5892.stl'
+# filename = 'stl-files/dragon_5892.stl'
 # filename = 'stl-files/buddha_5794.stl'
 # filename = 'stl-files/armadillo_6002.stl'
 
-max_cps = 40
-flag = 'dragon'
-tol = 1e-4
+# max_cps = 40
+# flag = 'Bunny'
+# tol = 1e-4
 
 ######### Get Surface #########
 if flag == 'Bunny':
@@ -231,9 +231,11 @@ print('Scaled Energies: ',Func.E_scaled)
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
+print(num_cps_pts)
+print(num_surf_pts)
 print('Surface error: \n',
         'Max: ',np.max(phi),'\n',
         'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
-ep_range,local_err = Func.check_local_RMS_error(1,10)
-print('local_RMS_error: \n',np.transpose(np.stack((ep_range,local_err),axis=0)))
+# ep_range,local_err = Func.check_local_RMS_error(1,10)
+# print('local_RMS_error: \n',np.transpose(np.stack((ep_range,local_err),axis=0)))
 print('END')
