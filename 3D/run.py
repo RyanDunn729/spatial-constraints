@@ -38,9 +38,9 @@ L3 = 1e2 # Local weighting
 # tol = 1e-5
 
 ### BUNNY ###
-max_cps = 42
-flag = 'Bunny'
-tol = 1e-5
+# max_cps = 42
+# flag = 'Bunny'
+# tol = 1e-5
 
 ### HEART ###
 # max_cps = 47
@@ -56,9 +56,24 @@ tol = 1e-5
 # b = 7.25
 # c = 5.75
 
+### Dragon ###
+max_cps = 47
+flag = 'Dragon'
+tol = 1e-5
+
+### Armadillo ###
+# max_cps = 47
+# flag = 'Armadillo'
+# tol = 1e-5
+
+### Buddha ###
+# max_cps = 47
+# flag = 'Buddha'
+# tol = 1e-5
+
 visualize_init = False
 
-filename_exact = 'stl-files/Bunny.stl'     # 129951 vertices
+# filename_exact = 'stl-files/Bunny.stl'     # 129951 vertices
 # filename = 'stl-files/Bunny_77.stl'
 # filename = 'stl-files/Bunny_108.stl'
 # filename = 'stl-files/Bunny_252.stl'
@@ -71,7 +86,7 @@ filename_exact = 'stl-files/Bunny.stl'     # 129951 vertices
 # filename = 'stl-files/Bunny_1002.stl'
 # filename = 'stl-files/Bunny_5002.stl'
 # filename = 'stl-files/Bunny_10002.stl'
-filename = 'stl-files/Bunny_25002.stl'
+# filename = 'stl-files/Bunny_25002.stl'
 # filename = 'stl-files/Bunny_40802.stl'
 # filename = 'stl-files/Bunny_63802.stl'
 # filename = 'stl-files/Bunny_100002.stl'
@@ -87,7 +102,7 @@ filename = 'stl-files/Bunny_25002.stl'
 
 # filename = 'stl-files/wing.stl'
 
-# filename = 'stl-files/dragon_5892.stl'
+# filename = 'stl-files/dragon_100k.stl'
 # filename = 'stl-files/buddha_5794.stl'
 # filename = 'stl-files/armadillo_6002.stl'
 
@@ -125,6 +140,21 @@ elif flag == 'Human':
 elif flag == 'Custom':
     surf_pts, normals = extract_stl_info(filename)
     exact = np.stack((surf_pts,normals))
+elif flag == 'Dragon':
+    data = pickle.load( open( "SAVED_DATA/dragon_data_100k.pkl", "rb" ) )
+    surf_pts = data[0]
+    normals = data[1]
+    exact = pickle.load( open( "SAVED_DATA/dragon_data_exact.pkl", "rb" ) )
+elif flag == 'Armadillo':
+    data = pickle.load( open( "SAVED_DATA/armadillo_data_100k.pkl", "rb" ) )
+    surf_pts = data[0]
+    normals = data[1]
+    exact = pickle.load( open( "SAVED_DATA/armadillo_data_exact.pkl", "rb" ) )
+elif flag == 'Buddha':
+    data = pickle.load( open( "SAVED_DATA/buddha_data_100k.pkl", "rb" ) )
+    surf_pts = data[0]
+    normals = data[1]
+    exact = pickle.load( open( "SAVED_DATA/buddha_data_exact.pkl", "rb" ) )
 else:
     surf_pts, normals = extract_stl_info(filename)
     exact = pickle.load( open( "SAVED_DATA/{}_data_exact_.pkl".format(flag), "rb" ) )
@@ -228,6 +258,13 @@ Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
 print('Scaled Energies: ',Func.E_scaled)
+pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
+if flag == 'Dragon':
+    pickle.dump(Func, open( "SAVED_DATA/Opt_dragon_.pkl","wb"))
+elif flag == 'Armadillo':
+    pickle.dump(Func, open( "SAVED_DATA/Opt_armadillo_.pkl","wb"))
+elif flag == 'Buddha':
+    pickle.dump(Func, open( "SAVED_DATA/Opt_buddha_.pkl","wb"))
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag

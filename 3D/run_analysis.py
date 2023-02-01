@@ -47,7 +47,7 @@ file = 'o4Bunny_pen40'
 
 ### Plot Data Mode ###
 # mode = 'Hicken_analysis'
-mode = 'Bspline_analysis'
+# mode = 'Bspline_analysis'
 # mode = 'Bspline_analysis_vary_L1'
 # mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
@@ -56,9 +56,10 @@ mode = 'Bspline_analysis'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
-mode = 'Hicken_v_Splines'
-mode = 'normalized_Hicken_v_Splines'
-mode = 'Comp_time'
+# mode = 'Hicken_v_Splines'
+# mode = 'normalized_Hicken_v_Splines'
+# mode = 'Comp_time'
+mode = 'plot_point_cloud'
 print(mode)
 
 # BSpline Volume Parameters #
@@ -101,7 +102,7 @@ elif file[2:-2]=='Bunny_pen':
     soft_const = True
     exact = pickle.load( open( "SAVED_DATA/_Bunny_data_exact_.pkl", "rb" ) )
     main_name = 'stl-files/Bunny_'
-    pt_data = [77,108,201,252,412,677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
+    pt_data = [677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002] # 77,108,201,252,412,
 
 if mode=='Hicken_analysis':
     file = file[2:-2]
@@ -663,14 +664,14 @@ if mode == 'Hicken_v_Splines':
     ep_data = [0.5, 1]
     k = 20
     rho = 20
-    num_samples = 10000
+    num_samples = 50000
     bunny_exact = pickle.load( open( "SAVED_DATA/_Bunny_data_exact_.pkl", "rb" ) )
     exact_dataset = KDTree(bunny_exact[0])
     np.random.seed(1)
     indx = np.random.randint(np.size(bunny_exact[0],0), size=num_samples)
     down_exact_pts = bunny_exact[0][indx,:]
     down_exact_nrm = bunny_exact[1][indx,:]
-    pt_data = [252,412,677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
+    pt_data = [677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002] # 252,412
 
     RMS_err_Bsplines_fine = np.zeros(len(pt_data))
     RMS_err_KSmethod = np.zeros(len(pt_data))
@@ -763,7 +764,7 @@ if mode == 'Comp_time':
     indx = np.random.randint(np.size(bunny_exact[0],0), size=num_samples)
     down_exact_pts = bunny_exact[0][indx,:]
     down_exact_nrm = bunny_exact[1][indx,:]
-    pt_data = [252,412,677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
+    pt_data = [677,1002,2002,3002,4002,5002,10002,25002,40802,63802,100002]
 
     # RMS_err_Bsplines_fine = np.zeros(len(pt_data))
     # RMS_err_KSmethod = np.zeros(len(pt_data))
@@ -792,12 +793,12 @@ if mode == 'Comp_time':
 
     #     print('finished ng={}'.format(num_pts))
     
-    time_Bsplines_1000 = [3.66625e-06,2.88745e-06,3.03260e-06,2.82635e-06,2.77640e-06,3.01960e-06,
+    time_Bsplines_1000 = [3.03260e-06,2.82635e-06,2.77640e-06,3.01960e-06,
         3.11460e-06,2.92115e-06,2.94500e-06,3.05460e-06,3.09575e-06,3.25665e-06,2.64320e-06]
-    time_KSmethod = [7.564250e-06,7.081200e-06,6.931800e-06,7.282700e-06,8.335100e-06,
+    time_KSmethod = [6.931800e-06,7.282700e-06,8.335100e-06,
         7.654400e-06,7.553100e-06,7.468300e-06,7.896700e-06,8.100350e-06,
         9.152785e-06,8.331000e-06,9.393050e-06]
-    time_FredMethod = [2.85195500e-05,4.47207000e-05,6.82422000e-05,1.00678750e-04,
+    time_FredMethod = [6.82422000e-05,1.00678750e-04,
         2.05626600e-04,3.19813600e-04,4.11701150e-04,5.57543150e-04,
         1.00118260e-03,2.50914620e-03,4.08993435e-03,6.66776455e-03,
         1.09231676e-02]
@@ -932,5 +933,14 @@ if mode == 'normalized_Hicken_v_Splines':
     # print(RMS_err_Bsplines_fine)
     # print("RMS Hicken")
     # print(RMS_err_KSmethod)
+
+if mode == 'plot_point_cloud':
+    surf_pts, normals = extract_stl_info('stl-files/Bunny_2002.stl')
+    ax = plt.axes(projection='3d')
+    ax.plot3D(surf_pts[:,0],surf_pts[:,1],surf_pts[:,2],'k.',markersize=10)
+    ax.grid(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
 
 plt.show()

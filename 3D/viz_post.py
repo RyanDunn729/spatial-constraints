@@ -26,7 +26,11 @@ dpi = 100
 # Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
-Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_25002.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_25002.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_100002.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
+Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
 
 print(Func.num_cps)
 
@@ -78,40 +82,40 @@ gold = (198/255, 146/255, 20/255)
 # ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 ############ Local Error #############
-res = 150
-bbox_perc = 2.5
+# res = 150
+# bbox_perc = 2.5
 
-ep_max = bbox_perc*Func.Bbox_diag / 100
-ep_range = np.linspace(-ep_max,ep_max,res)
-# dataset = KDTree(Func.exact[0])
-RMS_local = np.zeros(len(ep_range))
-sample_pts = Func.surf_pts
-sample_normals = Func.normals
-dataset = KDTree(sample_pts)
-for i,ep in enumerate(ep_range):
-        i_pts = Func.exact[0] + ep*Func.exact[1]
-        phi = KS_eval(i_pts,dataset,sample_normals,10,10)
-        phi_exact,_ = dataset.query(i_pts,k=1)
-        RMS_local[i] = np.sqrt(np.mean(  (abs(phi)-phi_exact)**2  ))
-KS_error = RMS_local/Func.Bbox_diag
+# ep_max = bbox_perc*Func.Bbox_diag / 100
+# ep_range = np.linspace(-ep_max,ep_max,res)
+# # dataset = KDTree(Func.exact[0])
+# RMS_local = np.zeros(len(ep_range))
+# sample_pts = Func.surf_pts
+# sample_normals = Func.normals
+# dataset = KDTree(sample_pts)
+# for i,ep in enumerate(ep_range):
+#         i_pts = Func.exact[0] + ep*Func.exact[1]
+#         phi = KS_eval(i_pts,dataset,sample_normals,10,10)
+#         phi_exact,_ = dataset.query(i_pts,k=1)
+#         RMS_local[i] = np.sqrt(np.mean(  (abs(phi)-phi_exact)**2  ))
+# KS_error = RMS_local/Func.Bbox_diag
 
-ep_range,data = Func.check_local_RMS_error(bbox_perc,res)
+# ep_range,data = Func.check_local_RMS_error(bbox_perc,res)
 
-sns.set(style='ticks')
-plt.figure(figsize=(6,5),dpi=180)
-ax = plt.axes()
-plt.semilogy(ep_range/100,data,'-',color='tab:blue',label='Our Method')
-plt.semilogy(ep_range/100,KS_error,'-',color='tab:orange',label='Explicit Method')
-ax.set_xlabel("Normalized Outward Distance",fontsize=14)
-ax.set_ylabel("RMS Error",fontsize=14)
-# ax.set_title('Local distance error')
-ax.set_xlim(-bbox_perc/100,bbox_perc/100)
-ax.legend(loc='upper center',fontsize=12)
-ax.grid()
-sns.despine()
-plt.tight_layout()
+# sns.set(style='ticks')
+# plt.figure(figsize=(6,5),dpi=180)
+# ax = plt.axes()
+# plt.semilogy(ep_range/100,data,'-',color='tab:blue',label='Our Method')
+# plt.semilogy(ep_range/100,KS_error,'-',color='tab:orange',label='Explicit Method')
+# ax.set_xlabel("Normalized Outward Distance",fontsize=14)
+# ax.set_ylabel("RMS Error",fontsize=14)
+# # ax.set_title('Local distance error')
+# ax.set_xlim(-bbox_perc/100,bbox_perc/100)
+# ax.legend(loc='upper center',fontsize=12)
+# ax.grid()
+# sns.despine()
+# plt.tight_layout()
 
-plt.savefig('PDF_figures/Err_v_ep.pdf',bbox_inches='tight')
+# plt.savefig('PDF_figures/Err_v_ep.pdf',bbox_inches='tight')
 
 # plt.figure(figsize=size,dpi=dpi)
 # res = 50
@@ -167,7 +171,7 @@ print('Control Point spacing:\n',spacing)
 print(np.linalg.norm(spacing))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
-print('Surface error (percentage): \n',
+print('Surface error (relative): \n',
         'Max: ',np.max(phi),'\n',
         'RMS: ',np.sqrt(np.mean(phi**2)))
 print('Diagonal: ',Func.Bbox_diag)

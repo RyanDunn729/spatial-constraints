@@ -54,14 +54,19 @@ if __name__ == '__main__':
     # filename = 'stl-files/Luggage_reduced.stl'
 
     # filename = 'stl-files/wing.stl'
-    # filename = 'stl-files/dragon_exact.stl'
+
     # filename = 'stl-files/armadillo_exact.stl'
-    filename = 'stl-files/buddha_exact.stl'
-    # filename = 'stl-files/buddha_5794.stl'
+    # filename = 'stl-files/armadillo_100k.stl'
+    
+    # filename = 'stl-files/buddha_exact.stl'
+    # filename = 'stl-files/buddha_100k.stl'
+
+    filename = 'stl-files/dragon_exact.stl'
+    # filename = 'stl-files/dragon_100k.stl'
 
     t1 = time.time()
     verts, norms = extract_stl_info(filename)
     data = np.stack((verts,norms))
-    pickle.dump(data, open("SAVED_DATA/buddha_data_exact.pkl","wb"))
+    pickle.dump(data, open("SAVED_DATA/armadillo_data_100k.pkl","wb"))
     t2 = time.time()
     print('Runtime: ',t2-t1)

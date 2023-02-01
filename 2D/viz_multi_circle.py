@@ -77,7 +77,7 @@ for rng in max_rngs:
     locs = np.vstack((locs,xspan[ind]))  
 
 ax2.plot(xspan,phi_ex,'--',linewidth=2,label='Exact SDF')
-ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Non-Differentiable Pts')
+ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Nondifferentiable points')
 ax2.set_xlabel('x')
 ax2.set_ylabel('$\phi$')
 ax2.set_xticks(xticks)
@@ -85,7 +85,7 @@ ax2.set_yticks(yticks)
 # ax2.set_xlim(x[0],x[1])
 ax2.legend(loc='lower center',framealpha=1,edgecolor='black',facecolor='white', fontsize="x-large")
 
-ax1.plot(locs,np.zeros(len(locs)),'.',color='tab:red',markersize=15,label='Non-Differentiable Pts')
+ax1.plot(locs,np.zeros(len(locs)),'.',color='tab:red',markersize=15,label='Nondifferentiable points')
 ax1.legend(loc='lower left',framealpha=1,edgecolor='black',facecolor='white', fontsize="x-large")
 ax2.grid()
 sns.despine()
