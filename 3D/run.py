@@ -28,14 +28,35 @@ L2 = 1e1  # Normal weighting
 L3 = 1e3 # Surface weighting
 
 ### Fuselage ###
-# max_cps = 47
-# flag = 'Fuselage'
-# tol = 1e-5
+max_cps = 44
+flag = 'Fuselage'
+tol = 1e-5
+filename = 'stl-files/Fuselage_5k.stl'
 
 ### Human ###
+max_cps = 32
+flag = 'Human'
+tol = 1e-5
+filename = 'stl-files/Human_5k.stl'
+
+### Battery ###
 # max_cps = 42
-# flag = 'Human'
+# flag = 'Battery'
 # tol = 1e-5
+# filename = 'stl-files/Battery_5k.stl'
+
+### Luggage ###
+# max_cps = 42
+# flag = 'Luggage'
+# tol = 1e-5
+# filename = 'stl-files/Luggage_5k.stl'
+
+### Wing ###
+# max_cps = 42
+# flag = 'Wing'
+# tol = 1e-5
+# filename = 'stl-files/Wing_5k.stl'
+
 
 ### BUNNY ###
 # max_cps = 42
@@ -72,9 +93,9 @@ L3 = 1e3 # Surface weighting
 # tol = 1e-4
 
 ### BUNNY ###
-max_cps = 29
-flag = 'Bunny'
-tol = 1e-5
+# max_cps = 29
+# flag = 'Bunny'
+# tol = 1e-5
 
 visualize_init = False
 
@@ -93,19 +114,10 @@ visualize_init = False
 # filename = 'stl-files/Bunny_10002.stl'
 # filename = 'stl-files/Bunny_25002.stl'
 # filename = 'stl-files/Bunny_40802.stl'
-filename = 'stl-files/Bunny_63802.stl'
+# filename = 'stl-files/Bunny_63802.stl'
 # filename = 'stl-files/Bunny_100002.stl'
 
 # filename = 'stl-files/Heart_5002.stl'
-
-# filename = 'stl-files/Fuselage_5002.stl'
-
-# filename = 'stl-files/Human_5002.stl'
-
-# filename = 'stl-files/Battery.stl'
-# filename = 'stl-files/Luggage_reduced.stl'
-
-# filename = 'stl-files/wing.stl'
 
 # filename = 'stl-files/dragon_100k.stl'
 # filename = 'stl-files/buddha_5794.stl'
@@ -136,12 +148,6 @@ elif flag == 'Ellipsoid':
     exact = np.stack((e.points(10000),e.unit_pt_normals(10000)))
     surf_pts = e.points(num_pts)
     normals = e.unit_pt_normals(num_pts)
-elif flag == 'Fuselage':
-    surf_pts, normals = extract_stl_info(filename)
-    exact = pickle.load( open( "SAVED_DATA/_Fuselage_data_exact_.pkl", "rb" ) )
-elif flag == 'Human':
-    surf_pts, normals = extract_stl_info(filename)
-    exact = pickle.load( open( "SAVED_DATA/_Human_data_exact_.pkl", "rb" ) )
 elif flag == 'Custom':
     surf_pts, normals = extract_stl_info(filename)
     exact = np.stack((surf_pts,normals))
@@ -162,7 +168,10 @@ elif flag == 'Buddha':
     exact = pickle.load( open( "SAVED_DATA/buddha_data_exact.pkl", "rb" ) )
 else:
     surf_pts, normals = extract_stl_info(filename)
-    exact = pickle.load( open( "SAVED_DATA/{}_data_exact_.pkl".format(flag), "rb" ) )
+    try:
+        exact = pickle.load( open( "SAVED_DATA/_{}_data_exact_.pkl".format(flag), "rb" ) )
+    except:
+        exact = extract_stl_info("stl-files/{}_exact.stl".format(flag))
 
 ######### Initialize Volume #########
 Func = MyProblem(exact, surf_pts, normals, max_cps, R, border, order)

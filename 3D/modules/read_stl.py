@@ -5,7 +5,7 @@ def extract_stl_info(filename):
     mesh_import = Mesh.from_file(filename)
     faces = mesh_import.points
     all_points = faces.reshape(3*len(mesh_import.points),3)
-    vertices,ind = np.unique(all_points,axis=0,return_index=True)
+    vertices,_ = np.unique(all_points,axis=0,return_index=True)
     vertices = np.float64(vertices)
 
     print('Num faces: ',len(faces))
@@ -46,14 +46,12 @@ if __name__ == '__main__':
 
     # filename = 'stl-files/Heart_5002.stl'
 
-    # filename = 'stl-files/Fuselage_5002.stl'
-
-    # filename = 'stl-files/Human_5002.stl'
-
-    # filename = 'stl-files/Battery.stl'
-    # filename = 'stl-files/Luggage_reduced.stl'
-
-    # filename = 'stl-files/wing.stl'
+    flag = "Human"
+    # filename = 'stl-files/Fuselage_exact.stl'
+    filename = 'stl-files/Human_exact.stl'
+    # filename = 'stl-files/Battery_exact.stl'
+    # filename = 'stl-files/Luggage_exact.stl'
+    # filename = 'stl-files/Wing_exact.stl'
 
     # filename = 'stl-files/armadillo_exact.stl'
     # filename = 'stl-files/armadillo_100k.stl'
@@ -61,12 +59,12 @@ if __name__ == '__main__':
     # filename = 'stl-files/buddha_exact.stl'
     # filename = 'stl-files/buddha_100k.stl'
 
-    filename = 'stl-files/dragon_exact.stl'
+    # filename = 'stl-files/dragon_exact.stl'
     # filename = 'stl-files/dragon_100k.stl'
 
     t1 = time.time()
     verts, norms = extract_stl_info(filename)
     data = np.stack((verts,norms))
-    pickle.dump(data, open("SAVED_DATA/armadillo_data_100k.pkl","wb"))
+    pickle.dump(data, open("SAVED_DATA/_{}_data_exact_.pkl".format(flag),"wb"))
     t2 = time.time()
     print('Runtime: ',t2-t1)
