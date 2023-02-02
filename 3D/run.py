@@ -23,9 +23,9 @@ order = 4
 border = 0.15
 
 soft_const = True
-L1 = 1e-2 # Curvature weighting
-L2 = 1e1  # Surface weighting
-L3 = 1e2 # Local weighting
+L1 = 5e-1 # Curvature weighting
+L2 = 1e1  # Normal weighting
+L3 = 1e3 # Surface weighting
 
 ### Fuselage ###
 # max_cps = 47
@@ -57,19 +57,24 @@ L3 = 1e2 # Local weighting
 # c = 5.75
 
 ### Dragon ###
-max_cps = 47
-flag = 'Dragon'
-tol = 1e-5
+# max_cps = 35
+# flag = 'Dragon'
+# tol = 1e-4
 
 ### Armadillo ###
-# max_cps = 47
+# max_cps = 31
 # flag = 'Armadillo'
-# tol = 1e-5
+# tol = 1e-4
 
 ### Buddha ###
-# max_cps = 47
+# max_cps = 37
 # flag = 'Buddha'
-# tol = 1e-5
+# tol = 1e-4
+
+### BUNNY ###
+max_cps = 29
+flag = 'Bunny'
+tol = 1e-5
 
 visualize_init = False
 
@@ -88,7 +93,7 @@ visualize_init = False
 # filename = 'stl-files/Bunny_10002.stl'
 # filename = 'stl-files/Bunny_25002.stl'
 # filename = 'stl-files/Bunny_40802.stl'
-# filename = 'stl-files/Bunny_63802.stl'
+filename = 'stl-files/Bunny_63802.stl'
 # filename = 'stl-files/Bunny_100002.stl'
 
 # filename = 'stl-files/Heart_5002.stl'
@@ -253,26 +258,31 @@ if soft_const:
     print('Final Objective Value: ',Prob['soft_objective'])
 else:
     print('Final Objective Value: ',Prob['Curvature_Metric'])
-print('Constraint check: \nmax_phi_surf: ',np.max(abs(Prob['phi_surf'])))
+    print('Constraint check: \nmax_phi_surf: ',np.max(abs(Prob['phi_surf'])))
 Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
 print('Scaled Energies: ',Func.E_scaled)
-pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 if flag == 'Dragon':
     pickle.dump(Func, open( "SAVED_DATA/Opt_dragon_.pkl","wb"))
 elif flag == 'Armadillo':
     pickle.dump(Func, open( "SAVED_DATA/Opt_armadillo_.pkl","wb"))
 elif flag == 'Buddha':
     pickle.dump(Func, open( "SAVED_DATA/Opt_buddha_.pkl","wb"))
+elif flag == 'Bunny':
+    pickle.dump(Func, open( "SAVED_DATA/Opt_bunny_.pkl","wb"))
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
-print(num_cps_pts)
-print(num_surf_pts)
+# print(num_cps_pts)
+# print(num_surf_pts)
 print('Surface error: \n',
         'Max: ',np.max(phi),'\n',
         'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
-# ep_range,local_err = Func.check_local_RMS_error(1,10)
+# ep_range,local_err = Func.check_local_RMS_error(2,10)
 # print('local_RMS_error: \n',np.transpose(np.stack((ep_range,local_err),axis=0)))
+print("Lambdas: ",L1,L2,L3)
+print("num_pts: ",num_surf_pts)
+print("num_cps: ",num_cps_pts)
+print("flag: ",flag)
 print('END')

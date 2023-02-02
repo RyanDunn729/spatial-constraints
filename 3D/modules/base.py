@@ -160,13 +160,15 @@ class MyProblem(object):
         b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
         return b.dot(self.cps[:,3])
 
-    def check_local_RMS_error(self,bbox_perc,res):
+    def check_local_RMS_error(self,bbox_perc,res,num_samp=1000):
         ep_max = bbox_perc*self.Bbox_diag / 100
         ep_range = np.linspace(-ep_max,ep_max,res)
         dataset = KDTree(self.exact[0])
         RMS_local = np.zeros(len(ep_range))
-        sample_pts = self.surf_pts
-        sample_normals = self.normals
+        np.random.seed(1)
+        indx = np.random.randint(np.size(self.exact[0],0), size=num_samp)
+        sample_pts = self.exact[0][indx,:]
+        sample_normals = self.exact[1][indx,:]
         for i,ep in enumerate(ep_range):
             i_pts = sample_pts + ep*sample_normals
             u,v,w = self.spatial_to_parametric(i_pts)

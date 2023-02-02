@@ -15,7 +15,7 @@ rc('text', usetex=True)
 plt.rc('legend', fontsize=12)    # legend fontsize
 plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
-save_mesh = False
+save_mesh = True
 size = (7.5,6.5)
 dpi = 100
 
@@ -23,14 +23,12 @@ dpi = 100
 # Func = pickle.load( open( "_Saved_Human_Func.pkl", "rb" ) )
 # Func = pickle.load( open( "_Saved_Fuselage_Func.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen41_100002.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_25002.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_100002.pkl", "rb" ) )
+Func = pickle.load( open( "SAVED_DATA/Opt_bunny_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
-Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
 
 print(Func.num_cps)
 
@@ -148,23 +146,23 @@ gold = (198/255, 146/255, 20/255)
 # ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 if save_mesh:
-        res = 160
-        x = Func.dimensions[0]
-        y = Func.dimensions[1]
-        z = Func.dimensions[2]
-        u = np.einsum('i,j,k->ijk', np.linspace(0,1,res), np.ones(res),np.ones(res)).flatten()
-        v = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(0,1,res),np.ones(res)).flatten()
-        w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0,1,res)).flatten()
-        basis = Func.Volume.get_basis_matrix(u, v, w, 0, 0, 0)
-        phi = basis.dot(Func.cps[:,3]).reshape((res,res,res))
-        verts, faces,_,_ = marching_cubes(phi, 0)
-        verts = verts*np.diff(Func.dimensions).flatten()/(res-1) + Func.dimensions[:,0]
-        surf = Mesh(np.zeros(faces.shape[0], dtype=Mesh.dtype))
-        for i, f in enumerate(faces):
-                for j in range(3):
-                        surf.vectors[i][j] = verts[f[j],:]
-        surf.save('Opt_Mesh.stl')
-        print('Number of Verices: ',len(verts))
+    res = 215
+    x = Func.dimensions[0]
+    y = Func.dimensions[1]
+    z = Func.dimensions[2]
+    u = np.einsum('i,j,k->ijk', np.linspace(0,1,res), np.ones(res),np.ones(res)).flatten()
+    v = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(0,1,res),np.ones(res)).flatten()
+    w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0,1,res)).flatten()
+    basis = Func.Volume.get_basis_matrix(u, v, w, 0, 0, 0)
+    phi = basis.dot(Func.cps[:,3]).reshape((res,res,res))
+    verts, faces,_,_ = marching_cubes(phi, 0)
+    verts = verts*np.diff(Func.dimensions).flatten()/(res-1) + Func.dimensions[:,0]
+    surf = Mesh(np.zeros(faces.shape[0], dtype=Mesh.dtype))
+    for i, f in enumerate(faces):
+            for j in range(3):
+                    surf.vectors[i][j] = verts[f[j],:]
+    surf.save('Opt_Mesh.stl')
+    print('Number of Verices: ',len(verts))
 
 spacing = np.max(np.diff(Func.cps[:,0:3],axis=0),axis=0)/Func.Bbox_diag
 print('Control Point spacing:\n',spacing)

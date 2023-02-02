@@ -70,6 +70,7 @@ border = 0.15
 max_cps = int(file[-2:])
 soft_const = True
 iter = 1
+# Curvature, normals, level set
 L = [1e-2, 10., 100.]
 # iter = 2
 # L = [1e-1, 1e0, 1e5]

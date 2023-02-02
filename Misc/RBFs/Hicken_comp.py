@@ -33,26 +33,10 @@ class Hicken_comp(ExplicitComponent):
         pts = inputs['pt']
 
         distances,indices = KDTree.query(pts,k=k)
-
         d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
         exp = np.exp(-rho*d_norm)
-        
-        di = KDTree.data[indices] - pts.reshape(num_pts,1,3)
-        check = 2*np.heaviside(np.einsum('ijk,ijk->ij',di,norm_vec[indices]),1) - 1 # -1 or +1
-        sign = 2*np.heaviside(np.sum(check,axis=1),1) - 1
-
-        # OLD
-        phi = sign*np.einsum('ij,ij->i',distances,exp)/np.sum(exp,axis=1)
-        # NEW
-        # phi = np.einsum('ij,ij->i',check*distances,exp)/np.sum(exp,axis=1)
-
-        ### SANITY CHECK ###
-        # sign2 = np.empty((num_pts))
-        # test = 0
-        # for i in range(num_pts):
-        #     di = inputs['pt'][i] - KDTree.data[indices[i]][test]
-        #     sign2[i] = 2*np.heaviside(np.dot(di, norm_vec[indices[i,test]]), 1) - 1
-        # print(check-sign2)
+        Dx = KDTree.data[indices] - np.reshape(pts,(num_pts,1,3))
+        phi = np.einsum('ijk,ijk,ij,i->i',Dx,norm_vec[indices],exp,1/np.sum(exp,axis=1))
 
         outputs['signedfun'] = phi
     
@@ -64,11 +48,7 @@ class Hicken_comp(ExplicitComponent):
         k = self.options['k']
         pts = inputs['pt']
 
-        # Find the closest 'k' points
         distances,indices = KDTree.query(pts,k=k)
-        
-        # + inside
-        # - outside
         di = KDTree.data[indices] - pts.reshape(num_pts,1,3)
         check = 2*np.heaviside(np.einsum('ijk,ijk->ij',di,norm_vec[indices]),1) - 1
         sign = 2*np.heaviside(np.sum(check,axis=1),1) - 1
@@ -78,15 +58,13 @@ class Hicken_comp(ExplicitComponent):
 
         dhi = np.empty((len(pts),3))
         dlow = np.empty((len(pts),3))
-        for i,i_pt in enumerate(pts):
-            k_pts = KDTree.data[indices[i]]
+        for i,(i_pt,ind) in enumerate(zip(pts,indices)):
+            k_pts = KDTree.data[ind]
 
-            ddist = np.transpose((i_pt-k_pts).T/(distances[i] + 1e-20)) # Avoid dividing by zero when distance = 0
+            dx = np.transpose((i_pt-k_pts).T/(distances[i] + 1e-20)) # Avoid dividing by zero when distance = 0
 
-            hi_terms = np.empty((k,3))
-            dexp = np.empty((k,3))
-            dexp = ddist-np.repeat(ddist[0],k).reshape(3,k).T
-            hi_terms = ddist - rho*np.einsum('i,ij->ij',distances[i],dexp)
+            dexp = dx-np.repeat(dx[0],k).reshape(3,k).T
+            hi_terms = dx - rho*np.einsum('i,ij->ij',distances[i],dexp)
             dhi[i] = np.einsum('ij,i->j',hi_terms,exp[i])
             dlow[i] = np.einsum('ij,i->j',-rho*dexp,exp[i])
 
@@ -95,9 +73,6 @@ class Hicken_comp(ExplicitComponent):
         
         # Quotient Rule (OLD)
         deriv = np.einsum('i,ij->ij', 1/low**2, (np.einsum('i,ij->ij',sign*low,dhi) - np.einsum('i,ij->ij',sign*hi,dlow)))
-        
-        ### SANITY CHECK ###
-        # print('SDF_gradient_norm_error: ', np.linalg.norm(np.linalg.norm(deriv,axis=1) - np.ones(num_pts))/num_pts)
 
         partials['signedfun','pt'] = deriv.flatten()
 
@@ -112,7 +87,7 @@ if __name__ == '__main__':
     # How many neighbors to sample nearby
     k = 10
     # weighting parameter, increases accuracy as -> inf
-    rho = 1000
+    rho = 20
     # Number of backbone points to sample
     pts_x = 35
     pts_y = 35
@@ -172,6 +147,7 @@ if __name__ == '__main__':
     
     prob['pt'] = pt_grid
 
+    # prob.check_partials(compact_print=False)
     prob.run_model()
 
     print(prob['signedfun'])
