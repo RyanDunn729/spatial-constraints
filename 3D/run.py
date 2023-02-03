@@ -30,32 +30,32 @@ L3 = 1e3 # Surface weighting
 ### Fuselage ###
 max_cps = 44
 flag = 'Fuselage'
-tol = 1e-5
-filename = 'stl-files/Fuselage_5k.stl'
+tol = 5e-5
+filename = 'stl-files/Fuselage_25k.stl'
 
 ### Human ###
-max_cps = 32
+max_cps = 34
 flag = 'Human'
-tol = 1e-5
-filename = 'stl-files/Human_5k.stl'
+tol = 5e-4
+filename = 'stl-files/Human_25k.stl'
 
 ### Battery ###
-# max_cps = 42
+# max_cps = 44
 # flag = 'Battery'
-# tol = 1e-5
-# filename = 'stl-files/Battery_5k.stl'
+# tol = 5e-4
+# filename = 'stl-files/Battery_25k.stl'
 
 ### Luggage ###
-# max_cps = 42
+# max_cps = 41
 # flag = 'Luggage'
-# tol = 1e-5
-# filename = 'stl-files/Luggage_5k.stl'
+# tol = 5e-5
+# filename = 'stl-files/Luggage_25k.stl'
 
 ### Wing ###
-# max_cps = 42
+# max_cps = 44
 # flag = 'Wing'
-# tol = 1e-5
-# filename = 'stl-files/Wing_5k.stl'
+# tol = 5e-4
+# filename = 'stl-files/Wing_25k.stl'
 
 
 ### BUNNY ###
@@ -128,19 +128,7 @@ visualize_init = False
 # tol = 1e-4
 
 ######### Get Surface #########
-if flag == 'Bunny':
-    if filename == 'stl-files/Bunny_100002.stl':
-        data = pickle.load( open( "SAVED_DATA/_Bunny_data_100002.pkl", "rb" ) )
-        surf_pts = data[0]
-        normals = data[1]
-    elif filename == 'stl-files/Bunny_63802.stl':
-        data = pickle.load( open( "SAVED_DATA/_Bunny_data_63802.pkl", "rb" ) )
-        surf_pts = data[0]
-        normals = data[1]
-    else:
-        surf_pts, normals = extract_stl_info(filename)
-    exact = pickle.load( open( "SAVED_DATA/_Bunny_data_exact_.pkl", "rb" ) )
-elif flag == 'Heart':
+if flag == 'Heart':
     surf_pts, normals = extract_stl_info(filename)
     exact = pickle.load( open( "SAVED_DATA/_Heart_data_exact_.pkl", "rb" ) )
 elif flag == 'Ellipsoid':
@@ -148,30 +136,9 @@ elif flag == 'Ellipsoid':
     exact = np.stack((e.points(10000),e.unit_pt_normals(10000)))
     surf_pts = e.points(num_pts)
     normals = e.unit_pt_normals(num_pts)
-elif flag == 'Custom':
-    surf_pts, normals = extract_stl_info(filename)
-    exact = np.stack((surf_pts,normals))
-elif flag == 'Dragon':
-    data = pickle.load( open( "SAVED_DATA/dragon_data_100k.pkl", "rb" ) )
-    surf_pts = data[0]
-    normals = data[1]
-    exact = pickle.load( open( "SAVED_DATA/dragon_data_exact.pkl", "rb" ) )
-elif flag == 'Armadillo':
-    data = pickle.load( open( "SAVED_DATA/armadillo_data_100k.pkl", "rb" ) )
-    surf_pts = data[0]
-    normals = data[1]
-    exact = pickle.load( open( "SAVED_DATA/armadillo_data_exact.pkl", "rb" ) )
-elif flag == 'Buddha':
-    data = pickle.load( open( "SAVED_DATA/buddha_data_100k.pkl", "rb" ) )
-    surf_pts = data[0]
-    normals = data[1]
-    exact = pickle.load( open( "SAVED_DATA/buddha_data_exact.pkl", "rb" ) )
 else:
     surf_pts, normals = extract_stl_info(filename)
-    try:
-        exact = pickle.load( open( "SAVED_DATA/_{}_data_exact_.pkl".format(flag), "rb" ) )
-    except:
-        exact = extract_stl_info("stl-files/{}_exact.stl".format(flag))
+    exact = extract_stl_info("stl-files/{}_exact.stl".format(flag))
 
 ######### Initialize Volume #########
 Func = MyProblem(exact, surf_pts, normals, max_cps, R, border, order)
@@ -272,22 +239,18 @@ Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
 print('Scaled Energies: ',Func.E_scaled)
-if flag == 'Dragon':
-    pickle.dump(Func, open( "SAVED_DATA/Opt_dragon_.pkl","wb"))
-elif flag == 'Armadillo':
-    pickle.dump(Func, open( "SAVED_DATA/Opt_armadillo_.pkl","wb"))
-elif flag == 'Buddha':
-    pickle.dump(Func, open( "SAVED_DATA/Opt_buddha_.pkl","wb"))
-elif flag == 'Bunny':
-    pickle.dump(Func, open( "SAVED_DATA/Opt_bunny_.pkl","wb"))
-pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
+pickle.dump(Func, open( "SAVED_DATA/Opt_{}_.pkl".format(flag),"wb"))
+# pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
 # print(num_cps_pts)
 # print(num_surf_pts)
-print('Surface error: \n',
+print('Surface error (rel): \n',
         'Max: ',np.max(phi),'\n',
         'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
+print('Surface error (units): \n',
+        'Max: ',Func.Bbox_diag*np.max(phi),'\n',
+        'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
 # ep_range,local_err = Func.check_local_RMS_error(2,10)
 # print('local_RMS_error: \n',np.transpose(np.stack((ep_range,local_err),axis=0)))
 print("Lambdas: ",L1,L2,L3)

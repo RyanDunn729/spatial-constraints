@@ -15,7 +15,7 @@ rc('text', usetex=True)
 plt.rc('legend', fontsize=12)    # legend fontsize
 plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
-save_mesh = True
+save_mesh = False
 size = (7.5,6.5)
 dpi = 100
 
@@ -25,12 +25,17 @@ dpi = 100
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen41_100002.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_25002.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_100002.pkl", "rb" ) )
-Func = pickle.load( open( "SAVED_DATA/Opt_bunny_.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
+
+Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
+Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Luggage_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Wing_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Battery_.pkl", "rb" ) )
+
 
 print(Func.num_cps)
+print(np.product(Func.num_cps))
+print(Func.dimensions)
 
 ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
 print(np.mean(data))
@@ -146,7 +151,7 @@ gold = (198/255, 146/255, 20/255)
 # ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 if save_mesh:
-    res = 215
+    res = 160
     x = Func.dimensions[0]
     y = Func.dimensions[1]
     z = Func.dimensions[2]
@@ -176,4 +181,6 @@ print('Diagonal: ',Func.Bbox_diag)
 print('Surface error (units): \n',
         'Max: ',Func.Bbox_diag*np.max(phi),'\n',
         'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
+print("Runtime: ", Func.runtime)
+print("Diagonal: ", Func.Bbox_diag)
 plt.show()
