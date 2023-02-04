@@ -23,21 +23,21 @@ order = 4
 border = 0.15
 
 soft_const = True
-L1 = 5e-1 # Curvature weighting
-L2 = 1e1  # Normal weighting
+L1 = 4e0 # Curvature weighting
+L2 = 1e1 # Normal weighting
 L3 = 1e3 # Surface weighting
 
 ### Fuselage ###
-max_cps = 44
-flag = 'Fuselage'
-tol = 5e-5
-filename = 'stl-files/Fuselage_25k.stl'
+# max_cps = 44
+# flag = 'Fuselage'
+# tol = 1e-4
+# filename = 'stl-files/Fuselage_25k.stl'
 
 ### Human ###
-max_cps = 34
-flag = 'Human'
-tol = 5e-4
-filename = 'stl-files/Human_25k.stl'
+# max_cps = 34
+# flag = 'Human'
+# tol = 5e-4
+# filename = 'stl-files/Human_25k.stl'
 
 ### Battery ###
 # max_cps = 44
@@ -48,7 +48,7 @@ filename = 'stl-files/Human_25k.stl'
 ### Luggage ###
 # max_cps = 41
 # flag = 'Luggage'
-# tol = 5e-5
+# tol = 1e-4
 # filename = 'stl-files/Luggage_25k.stl'
 
 ### Wing ###
@@ -57,16 +57,17 @@ filename = 'stl-files/Human_25k.stl'
 # tol = 5e-4
 # filename = 'stl-files/Wing_25k.stl'
 
-
 ### BUNNY ###
-# max_cps = 42
-# flag = 'Bunny'
-# tol = 1e-5
+max_cps = 28
+flag = 'Bunny'
+tol = 5e-5
+filename = 'stl-files/Bunny_500.stl'
 
-### HEART ###
-# max_cps = 47
+## HEART ###
+# max_cps = 34
 # flag = 'Heart'
-# tol = 1e-5
+# tol = 1e-4
+# filename = "stl-files/Heart_100k.stl"
 
 ### Ellipsoid ###
 # max_cps = 42
@@ -81,21 +82,19 @@ filename = 'stl-files/Human_25k.stl'
 # max_cps = 35
 # flag = 'Dragon'
 # tol = 1e-4
+# filename = 'stl-files/dragon_100k.stl'
 
 ### Armadillo ###
 # max_cps = 31
 # flag = 'Armadillo'
 # tol = 1e-4
+# filename = 'stl-files/armadillo_100k.stl'
 
 ### Buddha ###
 # max_cps = 37
 # flag = 'Buddha'
 # tol = 1e-4
-
-### BUNNY ###
-# max_cps = 29
-# flag = 'Bunny'
-# tol = 1e-5
+# filename = 'stl-files/buddha_100k.stl'
 
 visualize_init = False
 
@@ -117,21 +116,8 @@ visualize_init = False
 # filename = 'stl-files/Bunny_63802.stl'
 # filename = 'stl-files/Bunny_100002.stl'
 
-# filename = 'stl-files/Heart_5002.stl'
-
-# filename = 'stl-files/dragon_100k.stl'
-# filename = 'stl-files/buddha_5794.stl'
-# filename = 'stl-files/armadillo_6002.stl'
-
-# max_cps = 40
-# flag = 'Bunny'
-# tol = 1e-4
-
 ######### Get Surface #########
-if flag == 'Heart':
-    surf_pts, normals = extract_stl_info(filename)
-    exact = pickle.load( open( "SAVED_DATA/_Heart_data_exact_.pkl", "rb" ) )
-elif flag == 'Ellipsoid':
+if flag == 'Ellipsoid':
     e = Ellipsoid(a,b,c)
     exact = np.stack((e.points(10000),e.unit_pt_normals(10000)))
     surf_pts = e.points(num_pts)
@@ -192,8 +178,8 @@ if not soft_const:
                         scaling=scaling,bases=bases_surf)
     constraint.add_subsystem('Surface_Sampling',comp,promotes=['*'])
 #################################
-# Prob = om.Problem()
-Prob = Problem()
+Prob = om.Problem()
+# Prob = Problem()
 model = Prob.model
 model.add_subsystem('Inputs_Group', inputs, promotes=['*'])
 model.add_subsystem('Objective_Group', objective, promotes=['*'])
@@ -224,8 +210,10 @@ Prob.setup(force_alloc_complex=True)
 #################################
 Prob['phi_cps'] = Func.cps[:,3]
 #################################
+Prob.run_model()
 t1 = time.time()
-Prob.run()
+Prob.run_driver()
+# Prob.run()
 t2 = time.time()
 #################################
 print('Runtime: ',t2-t1)
@@ -239,8 +227,8 @@ Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
 print('Scaled Energies: ',Func.E_scaled)
-pickle.dump(Func, open( "SAVED_DATA/Opt_{}_.pkl".format(flag),"wb"))
-# pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
+# pickle.dump(Func, open( "SAVED_DATA/Opt_{}_.pkl".format(flag),"wb"))
+pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
 # print(num_cps_pts)

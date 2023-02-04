@@ -166,7 +166,8 @@ class MyProblem(object):
         dataset = KDTree(self.exact[0])
         RMS_local = np.zeros(len(ep_range))
         np.random.seed(1)
-        indx = np.random.randint(np.size(self.exact[0],0), size=num_samp)
+        rng = np.random.default_rng()
+        indx = rng.choice(np.size(self.exact[0],0), size=num_samp, replace=False)
         sample_pts = self.exact[0][indx,:]
         sample_normals = self.exact[1][indx,:]
         for i,ep in enumerate(ep_range):

@@ -9,8 +9,7 @@ def extract_stl_info(filename):
     vertices,_ = np.unique(uniq_pts,axis=0,return_index=True)
     vertices = np.float64(vertices)
 
-    print('Num faces: ',len(all_points))
-    print('Num "vertices": ',len(vertices))
+    print('Number of triangles: ',len(all_points))
 
     faces = all_points.reshape(len(all_points),3,3)
     face_centroids = np.mean(faces,axis=1)
@@ -41,7 +40,6 @@ def extract_stl_info_old(filename):
     return vertices, v_norms
 
 if __name__ == '__main__':
-    import pickle
     import time
     # filename_exact = 'stl-files/Bunny.stl'
     # filename = 'stl-files/Bunny_77.stl'

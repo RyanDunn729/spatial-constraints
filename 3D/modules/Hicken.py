@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial import KDTree
+import time
 
 def Exact_eval(pts,exact):
     dataset = KDTree(exact)
@@ -41,10 +42,22 @@ def KS_eval(pts,KDTree,norm_vec,k,rho):
     d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
     exp = np.exp(-rho*d_norm)
     Dx = KDTree.data[indices] - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
-    phi = np.einsum('ijk,ijk,ij,i->i',Dx,norm_vec[indices],exp,1/np.sum(exp,axis=1))
+    phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
     return phi
 
-if __name__ == '__main__':
+def KS_eval_timing(pts,KDTree,norm_vec,k,rho):
+    t1 = time.perf_counter()
+    distances,indices = KDTree.query(pts,k=k)
+    t2 = time.perf_counter()
+    d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
+    exp = np.exp(-rho*d_norm)
+    Dx = KDTree.data[indices] - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
+    # phi = np.einsum('ijk,ijk,ij,i->i',Dx,norm_vec[indices],exp,1/np.sum(exp,axis=1))
+    phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
+    t3 = time.perf_counter()
+    return phi, t2-t1, t3-t2
+
+def time_vs_Ngamma():
     import time
     import matplotlib.pyplot as plt
     
@@ -52,27 +65,43 @@ if __name__ == '__main__':
     dataset = KDTree(exact)
     norm_vec = np.random.rand(10000,3)
 
-    k = 4
-    rho = 10
+    k = 50
+    rho = 20
 
-    res = 200
-    time_set = np.zeros(res)
+    res = 60
+    time_set1 = np.zeros((20,res))
+    time_set2 = np.zeros((20,res))
     deriv_time_set = np.zeros(res)
-    time_data = np.logspace(1,3,res,dtype=int)
-    for i,num_pts in enumerate(time_data):
-        i_pts = np.random.rand(num_pts,3)
-        t1 = time.perf_counter()
-        phi = KS_eval(i_pts,dataset,norm_vec,k,rho)
-        t2 = time.perf_counter()
-        time_set[i] = t2-t1
-        t1 = time.perf_counter()
-        deriv = Hicken_deriv_eval(i_pts,dataset,norm_vec,k,rho)
-        t2 = time.perf_counter()
-        deriv_time_set[i] = t2-t1
-        print(num_pts,time_set[i],deriv_time_set[i])
-    plt.loglog(time_data,time_set,'.--',markersize=15,label='Evaluation')
-    plt.loglog(time_data,deriv_time_set,label='Derivative Evaluation')
+    time_data = np.logspace(2,6,res,dtype=int)
+    i_pts = np.random.rand(1000,3)
+    log_N = np.zeros(res)
+    for j in range(20):
+        np.random.seed(0)
+        for i,N_gamma in enumerate(time_data):
+            print(N_gamma)
+            exact = np.random.rand(N_gamma,3)
+            dataset = KDTree(exact)
+            norm_vec = np.random.rand(N_gamma,3)
+            # t1 = time.perf_counter()
+            phi, KD_time, other_time = KS_eval_timing(i_pts,dataset,norm_vec,k,rho)
+            # t2 = time.perf_counter()
+            time_set1[j,i] = KD_time
+            time_set2[j,i] = other_time
+            # t1 = time.perf_counter()
+            # deriv = Hicken_deriv_eval(i_pts,dataset,norm_vec,k,rho)
+            # t2 = time.perf_counter()
+            # deriv_time_set[i] = t2-t1
+            # print(num_pts,time_set[i],deriv_time_set[i])
+            log_N[i] = np.log10(N_gamma)
+        
+    plt.loglog(time_data,np.mean(time_set1,axis=0),'.--',markersize=15,label='KD_time')
+    plt.loglog(time_data,np.mean(time_set2,axis=0),'.--',markersize=15,label='other_time')
+    plt.loglog(time_data,log_N,'k',label='Ideal')
+    # plt.loglog(time_data,deriv_time_set,label='Derivative Evaluation')
     plt.legend()
     plt.xlabel('Number of evaluations')
     plt.ylabel('CPU Time')
     plt.show()
+
+if __name__ == '__main__':
+    time_vs_Ngamma()

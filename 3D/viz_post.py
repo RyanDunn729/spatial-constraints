@@ -15,23 +15,20 @@ rc('text', usetex=True)
 plt.rc('legend', fontsize=12)    # legend fontsize
 plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
-save_mesh = False
+save_mesh = True
 size = (7.5,6.5)
 dpi = 100
 
-# Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
-# Func = pickle.load( open( "_Saved_Human_Func.pkl", "rb" ) )
-# Func = pickle.load( open( "_Saved_Fuselage_Func.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen41_100002.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_25002.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny_pen40_100002.pkl", "rb" ) )
+Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 
-Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
-Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_500.pkl", "rb" ) )
+
+# Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Luggage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Wing_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Battery_.pkl", "rb" ) )
-
+# Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
 
 print(Func.num_cps)
 print(np.product(Func.num_cps))
@@ -85,8 +82,8 @@ gold = (198/255, 146/255, 20/255)
 # ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 ############ Local Error #############
-# res = 150
-# bbox_perc = 2.5
+# res = 2
+# bbox_perc = 100*5/Func.Bbox_diag
 
 # ep_max = bbox_perc*Func.Bbox_diag / 100
 # ep_range = np.linspace(-ep_max,ep_max,res)
@@ -102,16 +99,16 @@ gold = (198/255, 146/255, 20/255)
 #         RMS_local[i] = np.sqrt(np.mean(  (abs(phi)-phi_exact)**2  ))
 # KS_error = RMS_local/Func.Bbox_diag
 
-# ep_range,data = Func.check_local_RMS_error(bbox_perc,res)
+# ep_range,data = Func.check_local_RMS_error(bbox_perc,res,num_samp=20000)
 
 # sns.set(style='ticks')
 # plt.figure(figsize=(6,5),dpi=180)
 # ax = plt.axes()
 # plt.semilogy(ep_range/100,data,'-',color='tab:blue',label='Our Method')
-# plt.semilogy(ep_range/100,KS_error,'-',color='tab:orange',label='Explicit Method')
+# # plt.semilogy(ep_range/100,KS_error,'-',color='tab:orange',label='Explicit Method')
 # ax.set_xlabel("Normalized Outward Distance",fontsize=14)
 # ax.set_ylabel("RMS Error",fontsize=14)
-# # ax.set_title('Local distance error')
+# ax.set_title('Local distance error')
 # ax.set_xlim(-bbox_perc/100,bbox_perc/100)
 # ax.legend(loc='upper center',fontsize=12)
 # ax.grid()
@@ -151,7 +148,7 @@ gold = (198/255, 146/255, 20/255)
 # ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 if save_mesh:
-    res = 160
+    res = 140
     x = Func.dimensions[0]
     y = Func.dimensions[1]
     z = Func.dimensions[2]
@@ -176,11 +173,11 @@ phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
 print('Surface error (relative): \n',
         'Max: ',np.max(phi),'\n',
-        'RMS: ',np.sqrt(np.mean(phi**2)))
+        'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
 print('Diagonal: ',Func.Bbox_diag)
 print('Surface error (units): \n',
         'Max: ',Func.Bbox_diag*np.max(phi),'\n',
-        'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
+        'RMS: ',Func.Bbox_diag*np.sqrt(np.sum(phi**2)/len(phi)))
 print("Runtime: ", Func.runtime)
 print("Diagonal: ", Func.Bbox_diag)
 plt.show()

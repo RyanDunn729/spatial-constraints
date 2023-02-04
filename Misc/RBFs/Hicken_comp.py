@@ -36,7 +36,7 @@ class Hicken_comp(ExplicitComponent):
         d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
         exp = np.exp(-rho*d_norm)
         Dx = KDTree.data[indices] - np.reshape(pts,(num_pts,1,3))
-        phi = np.einsum('ijk,ijk,ij,i->i',Dx,norm_vec[indices],exp,1/np.sum(exp,axis=1))
+        phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
 
         outputs['signedfun'] = phi
     
