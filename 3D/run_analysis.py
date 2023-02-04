@@ -42,10 +42,10 @@ flag = 'Dragon'
 # mode = 'Hicken_analysis'
 # mode = 'Bspline_analysis'
 mode = 'Bspline_analysis_vary_L1'
-mode = 'Bspline_analysis_vary_L2'
-mode = 'Bspline_analysis_vary_L3'
+# mode = 'Bspline_analysis_vary_L2'
+# mode = 'Bspline_analysis_vary_L3'
 # mode = 'Visualize_lambdas_energies'
-# mode = 'Visualize_lambdas'
+mode = 'Visualize_lambdas'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
@@ -150,6 +150,8 @@ if mode == 'Bspline_analysis_vary_L1':
     m = model(max_cps,R,border,dim,tol,exact,soft_const)
     surf_pts, normals = extract_stl_info('stl-files/Bunny_25000.stl')
     for i,L1 in enumerate(L1_data):
+        if i<6:
+            continue
         Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
         pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_L1_"+str(i)+".pkl","wb"))
         del Func
@@ -184,10 +186,9 @@ if mode == 'Bspline_analysis_vary_L3':
         print('Finished L3 =',str(L3),'Optimization')
 
 if mode == 'Visualize_lambdas_energies':
-    L1_data = L[0]*data
-    L2_data = L[1]*data
-    L3_data = L[2]*data
-
+    L1_data = data
+    L2_data = data
+    L3_data = data
     RMS_surf_L1 = np.ones(len(L1_data))
     MAX_surf_L1 = np.ones(len(L1_data))
     RMS_local_L1 = np.ones(len(L1_data))
@@ -334,12 +335,9 @@ if mode == 'Visualize_lambdas_energies':
     plt.savefig('PDF_figures/L3.pdf',bbox_inches='tight')
 
 if mode == 'Visualize_lambdas':
-    L1_data = L[0]*data
-    L2_data = L[1]*data
-    L3_data = L[2]*data
-    i1 = np.argwhere(data==1e0)[0][0] -4
-    i2 = np.argwhere(data==1e0)[0][0] -4 
-    i3 = np.argwhere(data==1e0)[0][0] -4
+    L1_data = data
+    L2_data = data
+    L3_data = data
     RMS_surf_L1 = np.ones(len(L1_data))
     MAX_surf_L1 = np.ones(len(L1_data))
     RMS_local_L1 = np.ones(len(L1_data))
@@ -349,9 +347,7 @@ if mode == 'Visualize_lambdas':
     Energy3_L1 = np.ones(len(L1_data))
     Runtime_L1 = np.ones(len(L1_data))
     for i,L1 in enumerate(L1_data):
-        if i<4:
-            continue
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L1_"+str(iter)+"_"+str(i)+".pkl", "rb" ) )
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L1_"+str(i)+".pkl", "rb" ) )
         Energy1_L1[i] = Func.E_norm[0] # Measurement of the curvature energy
         Energy2_L1[i] = Func.E_norm[1] # Local energy
         Energy3_L1[i] = Func.E_norm[2] # Surf energy
@@ -372,9 +368,7 @@ if mode == 'Visualize_lambdas':
     Energy3_L2 = np.ones(len(L2_data))
     Runtime_L2 = np.ones(len(L2_data))
     for i,L2 in enumerate(L2_data):
-        if i<4:
-            continue
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L2_"+str(iter)+"_"+str(i)+".pkl", "rb" ) )
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L2_"+str(i)+".pkl", "rb" ) )
         Energy1_L2[i] = Func.E_norm[0] # Measurement of the curvature energy
         Energy2_L2[i] = Func.E_norm[1] # Surf energy
         Energy3_L2[i] = Func.E_norm[2] # local energy
@@ -395,9 +389,7 @@ if mode == 'Visualize_lambdas':
     Energy3_L3 = np.ones(len(L3_data))
     Runtime_L3 = np.ones(len(L3_data))
     for i,L3 in enumerate(L3_data):
-        if i<4:
-            continue
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L3_"+str(iter)+"_"+str(i)+".pkl", "rb" ) )
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L3_"+str(i)+".pkl", "rb" ) )
         Energy1_L3[i] = Func.E_norm[0] # Measurement of the curvature energy
         Energy2_L3[i] = Func.E_norm[1] # Surf energy
         Energy3_L3[i] = Func.E_norm[2] # local energy
@@ -409,33 +401,6 @@ if mode == 'Visualize_lambdas':
         max_Fnorm_L3[i] = Func.get_RMS_Fnorm()
         Runtime_L3[i] = Func.runtime
         print('Finished L3='+str(L3)+' dataset')
-    L1_data = L1_data[4:]
-    L2_data = L2_data[4:]
-    L3_data = L3_data[4:]
-    Energy1_L1 = Energy1_L1[4:]
-    Energy1_L2 = Energy1_L2[4:]
-    Energy1_L3 = Energy1_L3[4:]
-    Energy2_L1 = Energy2_L1[4:]
-    Energy2_L2 = Energy2_L2[4:]
-    Energy2_L3 = Energy2_L3[4:]
-    Energy3_L1 = Energy3_L1[4:]
-    Energy3_L2 = Energy3_L2[4:]
-    Energy3_L3 = Energy3_L3[4:]
-    RMS_surf_L1 = RMS_surf_L1[4:]
-    RMS_surf_L2 = RMS_surf_L2[4:]
-    RMS_surf_L3 = RMS_surf_L3[4:]
-    MAX_surf_L1 = MAX_surf_L1[4:]
-    MAX_surf_L2 = MAX_surf_L2[4:]
-    MAX_surf_L3 = MAX_surf_L3[4:]
-    RMS_local_L1 = RMS_local_L1[4:]
-    RMS_local_L2 = RMS_local_L2[4:]
-    RMS_local_L3 = RMS_local_L3[4:]
-    max_Fnorm_L1 = max_Fnorm_L1[4:]
-    max_Fnorm_L2 = max_Fnorm_L2[4:]
-    max_Fnorm_L3 = max_Fnorm_L3[4:]
-    Runtime_L1 = Runtime_L1[4:]
-    Runtime_L2 = Runtime_L2[4:]
-    Runtime_L3 = Runtime_L3[4:]
 
     sns.set(style='ticks')
     fig1= plt.figure(figsize=(5,4),dpi=180)
