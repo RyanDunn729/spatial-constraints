@@ -9,7 +9,7 @@ def Exact_eval(pts,exact):
 
 def Hicken_deriv_eval(pts,dataset,norm_vec,k,rho):
     distances,indices = dataset.query(pts,k=k)
-    di = dataset.data[indices] - pts.reshape(num_pts,1,3)
+    di = dataset.data[indices] - pts.reshape(len(pts),1,3)
     check = 2*np.heaviside(np.einsum('ijk,ijk->ij',di,norm_vec[indices]),1) - 1
     sign = 2*np.heaviside(np.sum(check,axis=1),1) - 1
 
@@ -39,9 +39,12 @@ def Hicken_deriv_eval(pts,dataset,norm_vec,k,rho):
 
 def KS_eval(pts,KDTree,norm_vec,k,rho):
     distances,indices = KDTree.query(pts,k=k)
+    if k==1:
+        phi = (KDTree.data[indices] - pts)*norm_vec[indices]
+        return phi
     d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
     exp = np.exp(-rho*d_norm)
-    Dx = KDTree.data[indices] - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
+    Dx = KDTree.data[indices,:] - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
     phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
     return phi
 

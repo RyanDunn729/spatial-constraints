@@ -19,16 +19,16 @@ save_mesh = True
 size = (7.5,6.5)
 dpi = 100
 
-Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
+# Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 
-# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_500.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_100000.pkl", "rb" ) )
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Luggage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Wing_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Battery_.pkl", "rb" ) )
-# Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
+Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
 
 print(Func.num_cps)
 print(np.product(Func.num_cps))
@@ -36,6 +36,7 @@ print(Func.dimensions)
 
 ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
 print(np.mean(data))
+print(len(Func.surf_pts))
 
 gold = (198/255, 146/255, 20/255)
 

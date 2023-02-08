@@ -35,7 +35,7 @@ class Hicken_comp(ExplicitComponent):
         distances,indices = KDTree.query(pts,k=k)
         d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
         exp = np.exp(-rho*d_norm)
-        Dx = KDTree.data[indices] - np.reshape(pts,(num_pts,1,3))
+        Dx = np.reshape(pts,(num_pts,1,3)) - KDTree.data[indices]
         phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
 
         outputs['signedfun'] = phi
@@ -49,9 +49,10 @@ class Hicken_comp(ExplicitComponent):
         pts = inputs['pt']
 
         distances,indices = KDTree.query(pts,k=k)
-        di = KDTree.data[indices] - pts.reshape(num_pts,1,3)
-        check = 2*np.heaviside(np.einsum('ijk,ijk->ij',di,norm_vec[indices]),1) - 1
-        sign = 2*np.heaviside(np.sum(check,axis=1),1) - 1
+        di = np.reshape(pts,(num_pts,1,3)) - KDTree.data[indices]
+        sign = 2*np.heaviside(np.einsum('ijk,ijk->ijk',di,norm_vec[indices]),1) - 1
+        # sign *= -1
+        # sign = 2*np.heaviside(di,1) - 1
 
         d_norm = (distances.T - distances[:,0]).T
         exp = np.exp(-rho*d_norm)
@@ -61,50 +62,20 @@ class Hicken_comp(ExplicitComponent):
         for i,(i_pt,ind) in enumerate(zip(pts,indices)):
             k_pts = KDTree.data[ind]
 
-            dx = np.transpose((i_pt-k_pts).T/(distances[i] + 1e-20)) # Avoid dividing by zero when distance = 0
+            dx = np.einsum('ij,i->ij',sign[i]*(i_pt-k_pts),1/(distances[i] + 1e-20)) # Avoid dividing by zero when distance = 0
 
-            dexp = dx-np.repeat(dx[0],k).reshape(3,k).T
-            hi_terms = dx - rho*np.einsum('i,ij->ij',distances[i],dexp)
-            dhi[i] = np.einsum('ij,i->j',hi_terms,exp[i])
-            dlow[i] = np.einsum('ij,i->j',-rho*dexp,exp[i])
+            hi_terms = norm_vec[ind] - sign[i]*(rho*(i_pt-k_pts))
+            dhi[i] = np.einsum('ij,i->j',-hi_terms,exp[i])
+            dlow[i] = np.einsum('ij,i->j',rho*dx,exp[i])
 
         low = np.sum(exp,axis=1)
         hi = np.einsum('ij,ij->i',distances,exp)
         
         # Quotient Rule (OLD)
-        deriv = np.einsum('i,ij->ij', 1/low**2, (np.einsum('i,ij->ij',sign*low,dhi) - np.einsum('i,ij->ij',sign*hi,dlow)))
+        deriv = -np.einsum('i,ij->ij', 1/low**2, (np.einsum('i,ij->ij',low,dhi) - np.einsum('i,ij->ij',hi,dlow)))
 
         partials['signedfun','pt'] = deriv.flatten()
 
-def deriv_eval(norm_vec, num_pts, KDTree, rho, k, pts):
-
-        distances,indices = KDTree.query(pts,k=k)
-        di = KDTree.data[indices] - pts.reshape(num_pts,1,3)
-        check = 2*np.heaviside(np.einsum('ijk,ijk->ij',di,norm_vec[indices]),1) - 1
-        sign = 2*np.heaviside(np.sum(check,axis=1),1) - 1
-
-        d_norm = (distances.T - distances[:,0]).T
-        exp = np.exp(-rho*d_norm)
-
-        dhi = np.empty((len(pts),3))
-        dlow = np.empty((len(pts),3))
-        for i,(i_pt,ind) in enumerate(zip(pts,indices)):
-            k_pts = KDTree.data[ind]
-
-            dx = np.transpose((i_pt-k_pts).T/(distances[i] + 1e-20)) # Avoid dividing by zero when distance = 0
-
-            dexp = dx-np.repeat(dx[0],k).reshape(3,k).T
-            hi_terms = dx - rho*np.einsum('i,ij->ij',distances[i],dexp)
-            dhi[i] = np.einsum('ij,i->j',hi_terms,exp[i])
-            dlow[i] = np.einsum('ij,i->j',-rho*dexp,exp[i])
-
-        low = np.sum(exp,axis=1)
-        hi = np.einsum('ij,ij->i',distances,exp)
-        
-        # Quotient Rule (OLD)
-        deriv = np.einsum('i,ij->ij', 1/low**2, (np.einsum('i,ij->ij',sign*low,dhi) - np.einsum('i,ij->ij',sign*hi,dlow)))
-
-        return deriv.flatten()
 
 if __name__ == '__main__':
     
@@ -124,7 +95,7 @@ if __name__ == '__main__':
     pts_z = 35
     num_backbone_pts = pts_x*pts_y*pts_z
 
-    filename = 'stl-files/heart_case03.stl'           # 1888 midpts, 5664 vertices
+    filename = 'stl-files/heart_case03_final1.stl'           # 1888 midpts, 5664 vertices
     # filename = 'stl-files/Stanford_bunny_fine.stl'    # 270021 midpts, 810063 vertices
     # filename = 'stl-files/stitch.stl'                 # 509580 midpts, 1528740 vertices
     # filename = 'stl-files/trachea_1191v.stl'          # 2197 midpts, 6591 vertices
@@ -196,14 +167,14 @@ if __name__ == '__main__':
         ax.set_ylabel('y')
         ax.set_zlabel('z')
 
-    # plot3d(pt_grid[prob['signedfun']>0])
+    plot3d(pt_grid[prob['signedfun']>0])
 
-    plt.plot(prob['pt'][0:35,2],prob['signedfun'][0:35],'k-')
+    # plt.plot(prob['pt'][0:35,2],prob['signedfun'][0:35],'k-')
 
-    fd_deriv = np.diff(prob['signedfun'][0:35])/np.diff(prob['pt'][0:35,2])
-    plt.plot(prob['pt'][1:35,2],fd_deriv,'--')
+    # fd_deriv = np.diff(prob['signedfun'][0:35])/np.diff(prob['pt'][0:35,2])
+    # plt.plot(prob['pt'][1:35,2],fd_deriv,'--')
 
-    deriv = deriv_eval(norm_vec, 35, dataset, rho, k, prob['pt'][0:35,:])
-    dxyz = np.reshape(deriv,(35,3))
-    plt.plot(prob['pt'][0:35,2],dxyz[:,2],'-')
+    # deriv = deriv_eval(norm_vec, 35, dataset, rho, k, prob['pt'][0:35,:])
+    # dxyz = np.reshape(deriv,(35,3))
+    # plt.plot(prob['pt'][0:35,2],dxyz[:,2],'-')
     plt.show()

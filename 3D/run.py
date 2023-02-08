@@ -23,47 +23,47 @@ order = 4
 border = 0.15
 
 soft_const = True
-L1 = 4e0 # Curvature weighting
+L1 = 5e-1 # Curvature weighting
 L2 = 1e1 # Normal weighting
 L3 = 1e3 # Surface weighting
 
 ### Fuselage ###
-# max_cps = 44
-# flag = 'Fuselage'
-# tol = 1e-4
-# filename = 'stl-files/Fuselage_25k.stl'
+max_cps = 44
+flag = 'Fuselage'
+tol = 1e-4
+filename = 'stl-files/Fuselage_25k.stl'
 
 ### Human ###
-# max_cps = 34
-# flag = 'Human'
-# tol = 5e-4
-# filename = 'stl-files/Human_25k.stl'
+max_cps = 34
+flag = 'Human'
+tol = 5e-4
+filename = 'stl-files/Human_25k.stl'
 
 ### Battery ###
-# max_cps = 44
-# flag = 'Battery'
-# tol = 5e-4
-# filename = 'stl-files/Battery_25k.stl'
+max_cps = 44
+flag = 'Battery'
+tol = 5e-4
+filename = 'stl-files/Battery_25k.stl'
 
 ### Luggage ###
-# max_cps = 41
-# flag = 'Luggage'
-# tol = 1e-4
-# filename = 'stl-files/Luggage_25k.stl'
+max_cps = 41
+flag = 'Luggage'
+tol = 1e-4
+filename = 'stl-files/Luggage_25k.stl'
 
 ### Wing ###
-# max_cps = 44
-# flag = 'Wing'
-# tol = 5e-4
-# filename = 'stl-files/Wing_25k.stl'
+max_cps = 44
+flag = 'Wing'
+tol = 5e-4
+filename = 'stl-files/Wing_25k.stl'
 
 ### BUNNY ###
-max_cps = 28
-flag = 'Bunny'
-tol = 5e-5
-filename = 'stl-files/Bunny_500.stl'
+# max_cps = 28
+# flag = 'Bunny'
+# tol = 5e-5
+# filename = 'stl-files/Bunny_500.stl'
 
-## HEART ###
+### HEART Study ###
 # max_cps = 34
 # flag = 'Heart'
 # tol = 1e-4
@@ -95,6 +95,12 @@ filename = 'stl-files/Bunny_500.stl'
 # flag = 'Buddha'
 # tol = 1e-4
 # filename = 'stl-files/buddha_100k.stl'
+
+## HEART For Optimization ###
+# max_cps = 34
+# flag = 'Heart'
+# tol = 1e-4
+# filename = "stl-files/heart_case03_final1.stl"
 
 visualize_init = False
 

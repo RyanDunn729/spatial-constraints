@@ -41,7 +41,7 @@ flag = 'Dragon'
 ### Plot Data Mode ###
 # mode = 'Hicken_analysis'
 # mode = 'Bspline_analysis'
-mode = 'Bspline_analysis_vary_L1'
+# mode = 'Bspline_analysis_vary_L1'
 # mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
 # mode = 'Visualize_lambdas_energies'
@@ -51,7 +51,7 @@ mode = 'Visualize_lambdas'
 # mode = 'Comp_err_order'
 # mode = 'Hicken_v_Splines'
 # mode = 'normalized_Hicken_v_Splines'
-# mode = 'Comp_time'
+mode = 'Comp_time'
 # mode = 'plot_point_cloud'
 print(mode)
 
@@ -93,7 +93,7 @@ if mode=='Hicken_analysis':
     file = file[2:-2]
     res = 140
     k = 10
-    rho = 10
+    rho = 1e-3
     for num_pts in [100000]:
         if file[2:-2] =='Ellipsoid':
             surf_pts = e.points(num_pts)
@@ -123,8 +123,7 @@ if mode=='Hicken_analysis':
         for i, f in enumerate(faces):
                 for j in range(3):
                         surf.vectors[i][j] = verts[f[j],:]
-        # surf.save('SAVED_DATA/Hick_'+file+'_' + str(num_pts) + '.stl')
-        surf.save('SAVED_DATA/Hick_dragon.stl')
+        surf.save('SAVED_DATA/Hick_'+file+'_' + str(num_pts) + '.stl')
         print('Finished ',str(num_pts),' point Hicken File')
 
 if mode=='Bspline_analysis':
@@ -256,9 +255,9 @@ if mode == 'Visualize_lambdas_energies':
     sns.set(style='ticks')
     fig1, axs1 = plt.subplots(2,1,sharex=True,figsize=(6,7),dpi=180)
     fig1.subplots_adjust(hspace=0)
-    axs1[0].loglog(L1_data,Energy3_L1/Energy3_L1[i1],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
-    axs1[0].loglog(L1_data,Energy2_L1/Energy2_L1[i1],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
-    axs1[0].loglog(L1_data,Energy1_L1/Energy1_L1[i1],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
+    axs1[0].loglog(L1_data,Energy3_L1/Energy3_L1[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
+    axs1[0].loglog(L1_data,Energy2_L1/Energy2_L1[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
+    axs1[0].loglog(L1_data,Energy1_L1/Energy1_L1[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
     axs1[0].set_ylabel('Energy about $\lambda_1={}$'.format(L[0]))
     axs1[0].set_xticks(L1_data)
     axs1[0].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
@@ -268,7 +267,7 @@ if mode == 'Visualize_lambdas_energies':
     axs1[1].loglog(L1_data,max_Fnorm_L1,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
     axs1[1].loglog(L1_data,RMS_local_L1,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
     axs1[1].loglog(L1_data,RMS_surf_L1,'o-', linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # axs1[1].loglog(L1_data,Runtime_L1/Runtime_L1[i1],'.--',markersize=8,label='Optimization time')
+    # axs1[1].loglog(L1_data,Runtime_L1/Runtime_L1[4],'.--',markersize=8,label='Optimization time')
     # ax4.loglog(L1_data,MAX_surf_L1,'.-',markersize=8,color='tab:cyan',label='Max Surface Error')
     axs1[1].set_xlabel('$\lambda_1$')
     axs1[1].set_ylabel('Error')
@@ -283,9 +282,9 @@ if mode == 'Visualize_lambdas_energies':
 
     sns.set(style='ticks')
     fig2, axs2 = plt.subplots(2,1,sharex=True,figsize=(6,7),dpi=180)
-    axs2[0].loglog(L2_data,Energy3_L2/Energy3_L2[i2],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
-    axs2[0].loglog(L2_data,Energy2_L2/Energy2_L2[i2],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
-    axs2[0].loglog(L2_data,Energy1_L2/Energy1_L2[i2],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
+    axs2[0].loglog(L2_data,Energy3_L2/Energy3_L2[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
+    axs2[0].loglog(L2_data,Energy2_L2/Energy2_L2[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
+    axs2[0].loglog(L2_data,Energy1_L2/Energy1_L2[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
     axs2[0].set_ylabel('Energy about $\lambda_2={}$'.format(L[1]))
     axs1[0].set_xticks(L2_data)
     axs2[0].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
@@ -294,7 +293,7 @@ if mode == 'Visualize_lambdas_energies':
     axs2[1].loglog(L2_data,max_Fnorm_L2,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
     axs2[1].loglog(L2_data,RMS_local_L2,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
     axs2[1].loglog(L2_data,RMS_surf_L2, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # axs2[1].loglog(L2_data,Runtime_L2/Runtime_L2[i2],'.--',markersize=8,label='Optimization time')
+    # axs2[1].loglog(L2_data,Runtime_L2/Runtime_L2[4],'.--',markersize=8,label='Optimization time')
     # axs2[1].loglog(L2_data,MAX_surf_L2,'.-',markersize=8,color='tab:cyan',label='Max Surface')
     axs2[1].set_xlabel('$\lambda_2$')
     axs2[1].set_ylabel('Error')
@@ -309,9 +308,9 @@ if mode == 'Visualize_lambdas_energies':
 
     sns.set(style='ticks')
     fig3, axs3 = plt.subplots(2,1,sharex=True,figsize=(6,7),dpi=180)
-    axs3[0].loglog(L3_data,Energy3_L3/Energy3_L3[i3],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
-    axs3[0].loglog(L3_data,Energy2_L3/Energy2_L3[i3],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
-    axs3[0].loglog(L3_data,Energy1_L3/Energy1_L3[i3],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
+    axs3[0].loglog(L3_data,Energy3_L3/Energy3_L3[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
+    axs3[0].loglog(L3_data,Energy2_L3/Energy2_L3[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
+    axs3[0].loglog(L3_data,Energy1_L3/Energy1_L3[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
     axs3[0].set_ylabel('Energy about $\lambda_3={}$'.format(L[2]))
     axs3[0].set_xticks(L3_data)
     axs3[0].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
@@ -320,7 +319,7 @@ if mode == 'Visualize_lambdas_energies':
     axs3[1].loglog(L3_data,max_Fnorm_L3,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
     axs3[1].loglog(L3_data,RMS_local_L3,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
     axs3[1].loglog(L3_data,RMS_surf_L3, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # axs3[1].loglog(L3_data,Runtime_L3/Runtime_L3[i3],'.--',markersize=8,label='Optimization time')
+    # axs3[1].loglog(L3_data,Runtime_L3/Runtime_L3[4],'.--',markersize=8,label='Optimization time')
     # axs3[1].loglog(L3_data,MAX_surf_L3,'.-',markersize=8,color='tab:cyan',label='Max Surface')
     axs3[1].set_xlabel('$\lambda_3$')
     axs3[1].set_ylabel('Error')
@@ -356,7 +355,7 @@ if mode == 'Visualize_lambdas':
         phi = Func.eval_surface()
         MAX_surf_L1[i] = np.max(abs(phi))/Func.Bbox_diag
         RMS_surf_L1[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        max_Fnorm_L1[i] = Func.get_RMS_Fnorm()
+        # max_Fnorm_L1[i] = Func.get_RMS_Fnorm()
         Runtime_L1[i] = Func.runtime
         print('Finished L1='+str(L1)+' dataset')
     RMS_surf_L2 = np.ones(len(L2_data))
@@ -377,7 +376,7 @@ if mode == 'Visualize_lambdas':
         phi = Func.eval_surface()
         MAX_surf_L2[i] = np.max(abs(phi))/Func.Bbox_diag
         RMS_surf_L2[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        max_Fnorm_L2[i] = Func.get_RMS_Fnorm()
+        # max_Fnorm_L2[i] = Func.get_RMS_Fnorm()
         Runtime_L2[i] = Func.runtime
         print('Finished L2='+str(L2)+' dataset')
     RMS_surf_L3 = np.ones(len(L3_data))
@@ -398,66 +397,69 @@ if mode == 'Visualize_lambdas':
         phi = Func.eval_surface()
         MAX_surf_L3[i] = np.max(abs(phi))/Func.Bbox_diag
         RMS_surf_L3[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        max_Fnorm_L3[i] = Func.get_RMS_Fnorm()
+        # max_Fnorm_L3[i] = Func.get_RMS_Fnorm()
         Runtime_L3[i] = Func.runtime
         print('Finished L3='+str(L3)+' dataset')
 
     sns.set(style='ticks')
     fig1= plt.figure(figsize=(5,4),dpi=180)
     ax1 = plt.axes()
-    ax1.loglog(L1_data,max_Fnorm_L1,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    ax1.loglog(L1_data,RMS_local_L1,'D-',linewidth=2,markersize=6,color='tab:red',label='Local $(\pm 0.01)$')
-    ax1.loglog(L1_data,RMS_surf_L1,'o-', linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # ax1.loglog(L1_data,Runtime_L1/Runtime_L1[i1],'.--',markersize=8,label='Optimization time')
+    # ax1.loglog(L1_data,max_Fnorm_L1,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    ax1.loglog(L1_data,RMS_local_L1,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
+    ax1.loglog(L1_data,RMS_surf_L1,'o-', linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
+    # ax1.loglog(L1_data,Runtime_L1/Runtime_L1[4],'.--',markersize=8,label='Optimization time')
     # ax1.loglog(L1_data,MAX_surf_L1,'.-',markersize=8,color='tab:cyan',label='Max Surface Error')
-    ax1.set_xlabel('$\lambda_1$',fontsize=16)
+    ax1.set_xlabel('$\lambda_r$',fontsize=16)
     ax1.set_ylabel('RMS Error',fontsize=16)
     ax1.set_xticks(L1_data)
     ax1.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white',fontsize=12)
     ax1.set_ylim(3e-4,1e2)
+    ax1.set_ylim(1e-4,1e0)
     ax1.grid()
     sns.despine()
     plt.tight_layout()
     set_fonts()
-    plt.savefig('PDF_figures/L1.pdf',bbox_inches='tight')
+    plt.savefig('PDF_figures/Lr.pdf',bbox_inches='tight')
 
     sns.set(style='ticks')
     fig2= plt.figure(figsize=(5,4),dpi=180)
     ax2 = plt.axes()
-    ax2.loglog(L2_data,max_Fnorm_L2,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    ax2.loglog(L2_data,RMS_local_L2,'D-',linewidth=2,markersize=6,color='tab:red',label='Local $(\pm 0.01)$')
-    ax2.loglog(L2_data,RMS_surf_L2, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # ax2.loglog(L2_data,Runtime_L2/Runtime_L2[i2],'.--',markersize=8,label='Optimization time')
+    # ax2.loglog(L2_data,max_Fnorm_L2,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    ax2.loglog(L2_data,RMS_local_L2,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
+    ax2.loglog(L2_data,RMS_surf_L2, 'o-',linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
+    # ax2.loglog(L2_data,Runtime_L2/Runtime_L2[4],'.--',markersize=8,label='Optimization time')
     # ax2.loglog(L2_data,MAX_surf_L2,'.-',markersize=8,color='tab:cyan',label='Max Surface')
-    ax2.set_xlabel('$\lambda_2$',fontsize=16)
+    ax2.set_xlabel('$\lambda_n$',fontsize=16)
     ax2.set_ylabel('RMS Error',fontsize=16)
     ax2.set_xticks(L2_data)
     ax2.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white',fontsize=12)
     ax2.set_ylim(3e-4,1e2)
+    ax2.set_ylim(1e-4,1e0)
     ax2.grid()
     sns.despine()
     plt.tight_layout()
     set_fonts()
-    plt.savefig('PDF_figures/L2.pdf',bbox_inches='tight')
+    plt.savefig('PDF_figures/Ln.pdf',bbox_inches='tight')
 
     sns.set(style='ticks')
     fig3= plt.figure(figsize=(5,4),dpi=180)
     ax3 = plt.axes()
-    ax3.loglog(L3_data,max_Fnorm_L3,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    ax3.loglog(L3_data,RMS_local_L3,'D-',linewidth=2,markersize=6,color='tab:red',label='Local $(\pm 0.01)$')
-    ax3.loglog(L3_data,RMS_surf_L3, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # ax3.loglog(L3_data,Runtime_L3/Runtime_L3[i3],'.--',markersize=8,label='Optimization time')
+    # ax3.loglog(L3_data,max_Fnorm_L3,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    ax3.loglog(L3_data,RMS_local_L3,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
+    ax3.loglog(L3_data,RMS_surf_L3, 'o-',linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
+    # ax3.loglog(L3_data,Runtime_L3/Runtime_L3[4],'.--',markersize=8,label='Optimization time')
     # ax3.loglog(L3_data,MAX_surf_L3,'.-',markersize=8,color='tab:cyan',label='Max Surface')
-    ax3.set_xlabel('$\lambda_3$',fontsize=16)
+    ax3.set_xlabel('$\lambda_p$',fontsize=16)
     ax3.set_ylabel('RMS Error',fontsize=16)
     ax3.set_xticks(L3_data)
     ax3.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white',fontsize=12)
     ax3.set_ylim(3e-4,1e2)
+    ax3.set_ylim(1e-4,1e0)
     ax3.grid()
     sns.despine()
     plt.tight_layout()
     set_fonts()
-    plt.savefig('PDF_figures/L3.pdf',bbox_inches='tight')
+    plt.savefig('PDF_figures/Lp.pdf',bbox_inches='tight')
 
 if mode == 'Plot_data':
     res = 30
@@ -528,12 +530,14 @@ if mode == 'Hicken_v_Splines':
 
     ep_data = [0.5, 1]
     k = 20
-    rho = 20
+    rho = 1e-3
     num_samples = 50000
     bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
     exact_dataset = KDTree(bunny_exact[0])
     np.random.seed(1)
-    indx = np.random.randint(np.size(bunny_exact[0],0), size=num_samples, replace=False)
+    rng = np.random.default_rng()
+    indx = rng.choice(np.size(bunny_exact[0],0), size=num_samples, replace=False)
+
     down_exact_pts = bunny_exact[0][indx,:]
     down_exact_nrm = bunny_exact[1][indx,:]
     pt_data = [500,808,1310,2120,3432,5555,9000,14560,25000,38160,64000,100000]
@@ -574,7 +578,7 @@ if mode == 'Hicken_v_Splines':
     ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
     ax1.set_ylabel('RMS Error',fontsize=14)
     ax1.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
-    ax1.set_ylim(2e-5,2e-2)
+    ax1.set_ylim(1e-4,2e-2)
     ax1.grid()
     sns.despine()
     plt.tight_layout()
@@ -603,7 +607,7 @@ if mode == 'Hicken_v_Splines':
                 label=('Explicit method ($\pm${})'.format(ep/100)))
     ax2.set_xlabel('$N_{\Gamma}$',fontsize=14)
     ax2.set_ylabel('RMS Error',fontsize=14)
-    ax2.set_ylim(9e-5,2e-2)
+    ax2.set_ylim(1e-4,2e-2)
     ax2.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
     ax2.grid()
     sns.despine()
@@ -613,18 +617,29 @@ if mode == 'Hicken_v_Splines':
     
 if mode == 'Comp_time':
     ep_data = [0.5, 1.0]
-    k = 40
-    rho = 20
-    num_samples = 2000
+    k = 10
+    rho = 1e-6
+    num_samples = 100000
     bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
-    down_exact_pts = bunny_exact[0][::2]
-    down_exact_nrm = bunny_exact[1][::2]
 
+    ### Evaluate points on the surface (MAY FAVOR KDTREES) ###
     np.random.seed(1)
     rng = np.random.default_rng()
-    indx = rng.choice(np.size(bunny_exact[0],0), size=num_samples)
+    indx = rng.choice(np.size(bunny_exact[0],0), size=num_samples, replace=False)
     down_exact_pts = bunny_exact[0][indx,:]
-    down_exact_nrm = bunny_exact[1][indx,:]
+
+    ### Evaluate points all across the domain ###
+    Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_500.pkl", "rb" ) )
+    res = int(num_samples**(1/3))
+    lower = np.min(Func.exact[0],axis=0) + 0.01*Func.Bbox_diag
+    upper = np.max(Func.exact[0],axis=0) - 0.01*Func.Bbox_diag
+    xx, yy, zz = np.meshgrid(
+        np.linspace(lower[0], upper[0], res),
+        np.linspace(lower[1], upper[1], res),
+        np.linspace(lower[2], upper[2], res),
+        indexing='ij')
+    down_exact_pts = np.vstack((xx.flatten(),yy.flatten(),zz.flatten())).T
+
     pt_data = [500,808,1310,2120,3432,5555,9000,14560,25000,38160,64000,100000]
 
     RMS_err_Bsplines_fine = np.zeros(len(pt_data))
@@ -641,12 +656,12 @@ if mode == 'Comp_time':
         t2 = time.perf_counter()
         time_Bsplines_1000[i] = (t2-t1) / len(phi)
 
-        t1 = time.perf_counter()
-        f = Freds_Method(down_exact_pts,Func.surf_pts,Func.normals)
-        t2 = time.perf_counter()
-        time_FredMethod[i] = (t2-t1) / len(down_exact_pts)
+        # t1 = time.perf_counter()
+        # phi = Freds_Method(down_exact_pts,Func.surf_pts,Func.normals)
+        # t2 = time.perf_counter()
+        # time_FredMethod[i] = (t2-t1) / len(phi)
 
-        dataset = KDTree(Func.surf_pts)
+        dataset = KDTree(Func.surf_pts, leafsize=10, compact_nodes=False, balanced_tree=False)
         t1 = time.perf_counter()
         phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)
         t2 = time.perf_counter()
@@ -654,17 +669,12 @@ if mode == 'Comp_time':
 
         print('finished ng={}'.format(num_pts))
     
-    # time_Bsplines_1000 = [3.03260e-06,2.82635e-06,2.77640e-06,3.01960e-06,
-    #     3.11460e-06,2.92115e-06,2.94500e-06,3.05460e-06,3.09575e-06,3.25665e-06,2.64320e-06]
-    # time_KSmethod = [6.931800e-06,7.282700e-06,8.335100e-06,
-    #     7.654400e-06,7.553100e-06,7.468300e-06,7.896700e-06,8.100350e-06,
-    #     9.152785e-06,8.331000e-06,9.393050e-06]
-    # time_FredMethod = [6.82422000e-05,1.00678750e-04,
-    #     2.05626600e-04,3.19813600e-04,4.11701150e-04,5.57543150e-04,
-    #     1.00118260e-03,2.50914620e-03,4.08993435e-03,6.66776455e-03,
-    #     1.09231676e-02]
+    time_FredMethod = [5.28685000e-05, 8.26599000e-05, 1.31702000e-04, 2.13472650e-04, 3.46353100e-04, 
+        5.79892700e-04, 9.10037800e-04, 1.48618920e-03, 2.57041075e-03, 3.84414815e-03, 6.56379180e-03, 1.04882249e-02]
+    # time_KSmethod = [8.71413454e-07,1.00968809e-06,1.09769150e-06,1.31131955e-06,1.55899359e-06,1.75958535e-06,
+    #     2.05441358e-06,2.33718357e-06,2.95816347e-06,3.34505425e-06,4.05482658e-06,4.73941707e-06]
 
-    P_OM = np.polyfit(np.log(pt_data),np.log(time_Bsplines_1000),1)
+    P_OM = np.polyfit(pt_data,time_Bsplines_1000,1)
     P_EM = np.polyfit(np.log(pt_data),np.log(time_KSmethod),1)
     P_CM = np.polyfit(np.log(pt_data),np.log(time_FredMethod),1)
 
@@ -675,17 +685,17 @@ if mode == 'Comp_time':
     sns.set(style='ticks')
     fig = plt.figure(figsize=(5.2,5),dpi=160)
     ax1 = plt.axes()
-    ax1.loglog(pt_data,np.exp(bf_OM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
+    ax1.loglog(pt_data,bf_OM(pt_data), 'k-',linewidth=6,alpha=0.13)
     ax1.loglog(pt_data,np.exp(bf_EM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
     ax1.loglog(pt_data,np.exp(bf_CM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
 
     ax1.loglog(pt_data,time_Bsplines_1000,'.-',label=('Our Method'),color='tab:blue',markersize=10,linewidth=2)
-    ax1.loglog(pt_data,time_KSmethod,'.:',label=('Explicit Method'),color='tab:orange',markersize=10,linewidth=2)
-    ax1.loglog(pt_data,time_FredMethod,'.--',label=('Previous Method'),color='tab:green',markersize=10,linewidth=2)
+    ax1.loglog(pt_data,time_KSmethod,'.--',label=('Explicit Method'),color='tab:orange',markersize=10,linewidth=2)
+    ax1.loglog(pt_data,time_FredMethod,'.:',label=('Previous Method'),color='tab:green',markersize=10,linewidth=2)
 
     plt.text(1.5e3,5e-4,'$\mathcal{O}(N_{\Gamma})$',        fontsize=14)
-    plt.text(1.7e4,1.2e-5,'$\mathcal{O}(k$log$(N_{\Gamma}))$',fontsize=14)
-    plt.text(5e4,4e-6,'$\mathcal{O}(1)$',            fontsize=14)
+    plt.text(2.3e4,1.2e-5,'$\mathcal{O}(k$log$(N_{\Gamma}))$',fontsize=14)
+    plt.text(5e4,3.4e-6,'$\mathcal{O}(1)$',            fontsize=14)
 
     ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
     ax1.set_ylabel('Evaluation Time per point (sec)',fontsize=14)
@@ -694,15 +704,20 @@ if mode == 'Comp_time':
     sns.despine()
     plt.tight_layout()
 
-    set_fonts()
-
     plt.savefig('PDF_figures/Comp_time.pdf',bbox_inches='tight')
+
+    d = 3
+    data = np.log(pt_data)*time_KSmethod[0]/(np.log(pt_data[0]))
+    # Worst Case (n^(1-1/d))
+    # ax1.loglog(pt_data, np.power(np.array(pt_data),1-1/d)*time_KSmethod[0]/(pt_data[0]**(1-1/d)),'k-',linewidth=6,alpha=0.13)
+    # Average (log(n))
+    # ax1.loglog(pt_data, np.log(pt_data)*time_KSmethod[0]/(np.log(pt_data[0])),'k-',linewidth=6,alpha=0.13)
 
 if mode == 'normalized_Hicken_v_Splines':
 
     ep_data = [0.5, 1]
     k = 20
-    rho = 20
+    rho = 1e-3
     num_samples = 10000
     bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
     exact_dataset = KDTree(bunny_exact[0])
@@ -725,7 +740,6 @@ if mode == 'normalized_Hicken_v_Splines':
         RMS_err_Bsplines_fine[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
 
         dataset = KDTree(Func.surf_pts)
-        runsum = 0
         all_dh,_ = dataset.query(Func.surf_pts,k=2)
         Hicken_normalizer[i] = np.mean(all_dh[:,1])
         phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)

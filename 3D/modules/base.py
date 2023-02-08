@@ -160,7 +160,9 @@ class MyProblem(object):
         b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
         return b.dot(self.cps[:,3])
 
-    def check_local_RMS_error(self,bbox_perc,res,num_samp=1000):
+    def check_local_RMS_error(self,bbox_perc,res,num_samp=None):
+        if num_samp is None:
+            num_samp = len(self.surf_pts)
         ep_max = bbox_perc*self.Bbox_diag / 100
         ep_range = np.linspace(-ep_max,ep_max,res)
         dataset = KDTree(self.exact[0])
