@@ -3,7 +3,7 @@ from modules.read_stl import extract_stl_info
 from modules.Fred_method import Freds_Method
 from skimage.measure import marching_cubes
 from modules.ellipsoid import Ellipsoid
-from modules.Hicken import KS_eval
+from modules.Hicken import KS_eval, Continuous_Hicken_eval
 from modules.Analyze import model
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
@@ -618,8 +618,8 @@ if mode == 'Hicken_v_Splines':
 if mode == 'Comp_time':
     ep_data = [0.5, 1.0]
     k = 10
-    rho = 1e-6
-    num_samples = 100000
+    rho = 20
+    num_samples = 1000
     bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
 
     ### Evaluate points on the surface (MAY FAVOR KDTREES) ###
@@ -631,8 +631,8 @@ if mode == 'Comp_time':
     ### Evaluate points all across the domain ###
     Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_500.pkl", "rb" ) )
     res = int(num_samples**(1/3))
-    lower = np.min(Func.exact[0],axis=0) + 0.01*Func.Bbox_diag
-    upper = np.max(Func.exact[0],axis=0) - 0.01*Func.Bbox_diag
+    lower = np.min(Func.exact[0],axis=0)
+    upper = np.max(Func.exact[0],axis=0)
     xx, yy, zz = np.meshgrid(
         np.linspace(lower[0], upper[0], res),
         np.linspace(lower[1], upper[1], res),
@@ -663,7 +663,9 @@ if mode == 'Comp_time':
 
         dataset = KDTree(Func.surf_pts, leafsize=10, compact_nodes=False, balanced_tree=False)
         t1 = time.perf_counter()
-        phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)
+        # distances,indices = dataset.query(down_exact_pts,k=k)
+        # phi = KS_eval(down_exact_pts,dataset,Func.normals,k,rho)
+        # phi = Continuous_Hicken_eval(down_exact_pts,Func.surf_pts,Func.normals,k,rho)
         t2 = time.perf_counter()
         time_KSmethod[i] = (t2-t1) / len(phi)
 
@@ -671,9 +673,9 @@ if mode == 'Comp_time':
     
     time_FredMethod = [5.28685000e-05, 8.26599000e-05, 1.31702000e-04, 2.13472650e-04, 3.46353100e-04, 
         5.79892700e-04, 9.10037800e-04, 1.48618920e-03, 2.57041075e-03, 3.84414815e-03, 6.56379180e-03, 1.04882249e-02]
-    # time_KSmethod = [8.71413454e-07,1.00968809e-06,1.09769150e-06,1.31131955e-06,1.55899359e-06,1.75958535e-06,
-    #     2.05441358e-06,2.33718357e-06,2.95816347e-06,3.34505425e-06,4.05482658e-06,4.73941707e-06]
-
+    time_KSmethod = [1.67347051e-05,2.60991770e-05,4.15005487e-05,6.73784636e-05,1.14200274e-04,1.74571742e-04,
+        2.72697531e-04,4.89094513e-04,7.49370782e-04,1.21390604e-03,2.07241920e-03,3.11257037e-03]
+    # print(time_KSmethod)
     P_OM = np.polyfit(pt_data,time_Bsplines_1000,1)
     P_EM = np.polyfit(np.log(pt_data),np.log(time_KSmethod),1)
     P_CM = np.polyfit(np.log(pt_data),np.log(time_FredMethod),1)
@@ -683,6 +685,7 @@ if mode == 'Comp_time':
     bf_CM = np.poly1d(P_CM)
 
     sns.set(style='ticks')
+    set_fonts()
     fig = plt.figure(figsize=(5.2,5),dpi=160)
     ax1 = plt.axes()
     ax1.loglog(pt_data,bf_OM(pt_data), 'k-',linewidth=6,alpha=0.13)
@@ -693,9 +696,14 @@ if mode == 'Comp_time':
     ax1.loglog(pt_data,time_KSmethod,'.--',label=('Explicit Method'),color='tab:orange',markersize=10,linewidth=2)
     ax1.loglog(pt_data,time_FredMethod,'.:',label=('Previous Method'),color='tab:green',markersize=10,linewidth=2)
 
+    # Worst Case (n^(1-1/d))
+    # ax1.loglog(pt_data, np.power(np.array(pt_data),1-1/3)*time_KSmethod[0]/(pt_data[0]**(1-1/3)),'r-',linewidth=6,alpha=0.50)
+    # Average (log(n))
+    # ax1.loglog(pt_data, np.log(pt_data)*time_KSmethod[-3]/(np.log(pt_data[-3])),'k-',linewidth=6,alpha=0.13)
+
     plt.text(1.5e3,5e-4,'$\mathcal{O}(N_{\Gamma})$',        fontsize=14)
-    plt.text(2.3e4,1.2e-5,'$\mathcal{O}(k$log$(N_{\Gamma}))$',fontsize=14)
-    plt.text(5e4,3.4e-6,'$\mathcal{O}(1)$',            fontsize=14)
+    # plt.text(1.5e4,1.6e-5,'$\mathcal{O}(\log(N_{\Gamma}))$',fontsize=14)
+    plt.text(5e4,3.8e-6,'$\mathcal{O}(1)$',            fontsize=14)
 
     ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
     ax1.set_ylabel('Evaluation Time per point (sec)',fontsize=14)
@@ -706,12 +714,6 @@ if mode == 'Comp_time':
 
     plt.savefig('PDF_figures/Comp_time.pdf',bbox_inches='tight')
 
-    d = 3
-    data = np.log(pt_data)*time_KSmethod[0]/(np.log(pt_data[0]))
-    # Worst Case (n^(1-1/d))
-    # ax1.loglog(pt_data, np.power(np.array(pt_data),1-1/d)*time_KSmethod[0]/(pt_data[0]**(1-1/d)),'k-',linewidth=6,alpha=0.13)
-    # Average (log(n))
-    # ax1.loglog(pt_data, np.log(pt_data)*time_KSmethod[0]/(np.log(pt_data[0])),'k-',linewidth=6,alpha=0.13)
 
 if mode == 'normalized_Hicken_v_Splines':
 

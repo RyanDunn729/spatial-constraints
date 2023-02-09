@@ -48,6 +48,18 @@ def KS_eval(pts,KDTree,norm_vec,k,rho):
     phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
     return phi
 
+def Continuous_Hicken_eval(pts,pt_cloud,norm_vec,k,rho):
+    Dx = pt_cloud - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
+    distances = np.linalg.norm(Dx,axis=2)
+    d_norm = np.transpose(distances.T - np.min(distances) + 1e-20)
+    if k==1:
+        phi = Dx*norm_vec
+        return phi
+    exp = np.exp(-rho*d_norm)
+    # Dx = KDTree.data[indices,:] - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
+    phi = np.einsum('ijk,ij->i',Dx*norm_vec,exp)/np.sum(exp,axis=1)
+    return phi
+
 def KS_eval_timing(pts,KDTree,norm_vec,k,rho):
     t1 = time.perf_counter()
     distances,indices = KDTree.query(pts,k=k)

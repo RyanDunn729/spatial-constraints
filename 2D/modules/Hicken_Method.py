@@ -1,26 +1,16 @@
 import numpy as np
 from scipy.spatial import KDTree
 
-def Hicken_eval(pts,dataset,norm_vec,k,rho,curv=None):
+def Hicken_eval(pts,dataset,norm_vec,k,rho):
     distances,indices = dataset.query(pts,k=k)
+    if k==1:
+        phi = (dataset.data[indices] - pts)*norm_vec[indices]
+        return phi
     d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
     exp = np.exp(-rho*d_norm)
-    phi_lin = np.empty(len(pts))
-    if curv is not None:
-        dist_quad = np.empty((len(pts),k))
-    for i,(i_pt,ind) in enumerate(zip(pts,indices)):
-        dx = dataset.data[ind] - i_pt
-        phi_lin[i] = np.dot(np.einsum('ij,ij->i',dx,norm_vec[ind]),exp[i]/np.sum(exp[i]))
-        if curv is None:
-            phi_quad = None
-        else:
-            m = np.tile(np.eye(2),(k,1,1)) - np.einsum('ij,ik->ijk',norm_vec[ind],norm_vec[ind])
-            q = np.einsum('ik,ijk,ij->i',dx,m,dx)
-            quadratic = curv[ind] * q /2
-            dist_quad[i,:] += quadratic
-    if curv is not None:
-        phi_quad = np.einsum('ij,ij->i',dist_quad,exp)/np.sum(exp,axis=1)
-    return phi_lin,phi_quad
+    Dx = dataset.data[indices,:] - np.reshape(pts,(pts.shape[0],1,pts.shape[1]))
+    phi = np.einsum('ijk,ij->i',Dx*norm_vec[indices],exp)/np.sum(exp,axis=1)
+    return phi
 
 def Exact_eval(pts,exact):
     dataset = KDTree(exact)
@@ -29,23 +19,23 @@ def Exact_eval(pts,exact):
 
 def Hicken_deriv_eval(pts,dataset,norm_vec,k,rho):
     distances,indices = dataset.query(pts,k=k)
-    di = dataset.data[indices] - pts.reshape(num_pts,1,3)
+    di = dataset.data[indices] - pts.reshape(len(pts),1,2)
     check = 2*np.heaviside(np.einsum('ijk,ijk->ij',di,norm_vec[indices]),1) - 1
     sign = 2*np.heaviside(np.sum(check,axis=1),1) - 1
 
     d_norm = (distances.T - distances[:,0]).T
     exp = np.exp(-rho*d_norm)
 
-    dhi = np.empty((len(pts),3))
-    dlow = np.empty((len(pts),3))
+    dhi = np.empty((len(pts),2))
+    dlow = np.empty((len(pts),2))
     for i,(i_pt,ind) in enumerate(zip(pts,indices)):
         k_pts = dataset.data[ind]
 
         dx = np.transpose((i_pt-k_pts).T/(distances[i] + 1e-20)) # Avoid dividing by zero when distance = 0
 
-        hi_terms = np.empty((k,3))
-        dexp = np.empty((k,3))
-        dexp = dx-np.repeat(dx[0],k).reshape(3,k).T
+        hi_terms = np.empty((k,2))
+        dexp = np.empty((k,2))
+        dexp = dx-np.repeat(dx[0],k).reshape(2,k).T
         hi_terms = dx - rho*np.einsum('i,ij->ij',distances[i],dexp)
         dhi[i] = np.einsum('ij,i->j',hi_terms,exp[i])
         dlow[i] = np.einsum('ij,i->j',-rho*dexp,exp[i])

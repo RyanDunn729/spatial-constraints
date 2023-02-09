@@ -1,4 +1,4 @@
-from modules.Hicken_Method import Hicken_eval
+from modules.Hicken_Method import Hicken_eval, Hicken_deriv_eval
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -29,7 +29,7 @@ res = 300
 xx,yy = np.meshgrid(np.linspace(x[0],x[1],res),
                     np.linspace(y[0],y[1],res))
 pts = np.stack((xx.flatten(),yy.flatten()),axis=1)
-phi,_ = Hicken_eval(pts,KDTree(Func.exact[0]),Func.exact[1],15,10)
+phi = Hicken_eval(pts,KDTree(Func.exact[0]),Func.exact[1],15,10)
 phi = phi.reshape(res,res)
 ax1.pcolormesh(xx,yy,phi,shading='gouraud',cmap='Greys', vmin=-5, vmax=5)
 for i in range(4):
@@ -57,8 +57,22 @@ pts = np.stack((xspan,yspan),axis=1)
 u,v = Func.spatial_to_parametric(pts)
 b = Func.Surface.get_basis_matrix(u,v,0,0)
 phi = b.dot(Func.cps[:,2])
-ax2.plot(xspan,phi,linewidth=2,label='Our Function')
-phi_ex,_ = Hicken_eval(pts,KDTree(Func.exact[0]),Func.exact[1],5,100)
+# b10 = Func.Surface.get_basis_matrix(u,v,1,0)
+# dx = b10.dot(Func.cps[:,2])
+# b01 = Func.Surface.get_basis_matrix(u,v,0,1)
+# dy = b01.dot(Func.cps[:,2])
+# phi_ex = np.linalg.norm(np.column_stack((dx,dy)),axis=1)
+
+num_samples = np.size(Func.exact[0],0)
+np.random.seed(1)
+rng = np.random.default_rng()
+indx = rng.choice(np.size(Func.exact[0],0), size=num_samples, replace=False)
+down_pts = Func.exact[0][indx,:]
+down_norms = Func.exact[1][indx,:]
+
+phi_ex = Hicken_eval(pts,KDTree(down_pts),down_norms,15,10)
+# phi_ex = Hicken_deriv_eval(pts,KDTree(down_pts),down_norms,15,10)
+# phi_ex = phi_ex[:,0]
 min_rngs = [[-12,-7],[-6,0],[6,9]]
 max_rngs = [[0,4]]
 vals = np.empty((0,1))
@@ -76,7 +90,8 @@ for rng in max_rngs:
     ind = phi_ex==np.max(phi_ex[ind])
     locs = np.vstack((locs,xspan[ind]))  
 
-ax2.plot(xspan,phi_ex,'--',linewidth=2,label='Exact SDF')
+ax2.plot(xspan,phi,linewidth=2,label='Our Function')
+ax2.plot(xspan,phi_ex,'--',linewidth=2,label='Exact signed distance')
 ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Nondifferentiable points')
 ax2.set_xlabel('x')
 ax2.set_ylabel('$\phi$')
