@@ -36,22 +36,23 @@ file = 'o4Bunny28'
 # file = 'o4Bunny34'
 # file = 'o4Bunny30'
 
-flag = 'Dragon'
+# flag = 'Dragon'
 
 ### Plot Data Mode ###
-# mode = 'Hicken_analysis'
+mode = 'Hicken_analysis'
+isocontour = 0
 # mode = 'Bspline_analysis'
 # mode = 'Bspline_analysis_vary_L1'
 # mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
 # mode = 'Visualize_lambdas_energies'
-mode = 'Visualize_lambdas'
+# mode = 'Visualize_lambdas'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
 # mode = 'Hicken_v_Splines'
 # mode = 'normalized_Hicken_v_Splines'
-mode = 'Comp_time'
+# mode = 'Comp_time'
 # mode = 'plot_point_cloud'
 print(mode)
 
@@ -91,16 +92,16 @@ elif file[2:-2]=='Bunny':
 
 if mode=='Hicken_analysis':
     file = file[2:-2]
-    res = 140
-    k = 10
+    res = 180
+    k = 20
     rho = 1e-3
     for num_pts in [100000]:
         if file[2:-2] =='Ellipsoid':
             surf_pts = e.points(num_pts)
             normals = e.unit_pt_normals(num_pts)
-        elif flag == 'Dragon':
-            filename = 'stl-files/dragon_100k.stl'
-            surf_pts, normals = extract_stl_info(filename)
+        # elif flag == 'Dragon':
+        #     filename = 'stl-files/dragon_100k.stl'
+        #     surf_pts, normals = extract_stl_info(filename)
         else:
             filename = main_name+str(num_pts)+'.stl'
             surf_pts, normals = extract_stl_info(filename)
@@ -116,15 +117,16 @@ if mode=='Hicken_analysis':
         pts[:, 1] = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(y[0],y[1],res),np.ones(res)).flatten()
         pts[:, 2] = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(z[0],z[1],res)).flatten()
         phi = KS_eval(pts,KDTree(surf_pts),normals,k,rho)
-        phi = phi.reshape((res,res,res))
-        verts, faces,_,_ = marching_cubes(phi, 0)
-        verts = verts*np.diff(dimensions).flatten()/(res-1) + dimensions[:,0]
-        surf = Mesh(np.zeros(faces.shape[0], dtype=Mesh.dtype))
-        for i, f in enumerate(faces):
-                for j in range(3):
-                        surf.vectors[i][j] = verts[f[j],:]
-        surf.save('SAVED_DATA/Hick_'+file+'_' + str(num_pts) + '.stl')
-        print('Finished ',str(num_pts),' point Hicken File')
+        phi = phi.reshape((res,res,res))/np.linalg.norm(diff)
+        for isocontour in [-0.005,-0.01,0,0.005,0.01]:
+            verts, faces,_,_ = marching_cubes(phi, isocontour)
+            verts = verts*np.diff(dimensions).flatten()/(res-1) + dimensions[:,0]
+            surf = Mesh(np.zeros(faces.shape[0], dtype=Mesh.dtype))
+            for i, f in enumerate(faces):
+                    for j in range(3):
+                            surf.vectors[i][j] = verts[f[j],:]
+            surf.save('Hick_'+file+'_' + str(isocontour) + '.stl')
+            print('Finished ',str(isocontour),' point Hicken File')
 
 if mode=='Bspline_analysis':
     pt_data = [pt_data[group-1], pt_data[-group]]

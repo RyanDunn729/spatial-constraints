@@ -16,24 +16,30 @@ plt.rc('legend', fontsize=12)    # legend fontsize
 plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
 save_mesh = True
+res = 180
+isocontour = -0.01
+mesh_name = f'Opt_Mesh_{isocontour}.stl'
+
 size = (7.5,6.5)
 dpi = 100
 
 # Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_100000.pkl", "rb" ) )
+Func = pickle.load( open( "Opt_Bunny_For_OffSurface1.pkl", "rb" ) )
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Luggage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Wing_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Battery_.pkl", "rb" ) )
-Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
 
 print(Func.num_cps)
 print(np.product(Func.num_cps))
 print(Func.dimensions)
-
+print(Func.Bbox_diag)
+exit()
 ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
 print(np.mean(data))
 print(len(Func.surf_pts))
@@ -149,7 +155,6 @@ gold = (198/255, 146/255, 20/255)
 # ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 if save_mesh:
-    res = 140
     x = Func.dimensions[0]
     y = Func.dimensions[1]
     z = Func.dimensions[2]
@@ -158,13 +163,13 @@ if save_mesh:
     w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0,1,res)).flatten()
     basis = Func.Volume.get_basis_matrix(u, v, w, 0, 0, 0)
     phi = basis.dot(Func.cps[:,3]).reshape((res,res,res))
-    verts, faces,_,_ = marching_cubes(phi, 0)
+    verts, faces,_,_ = marching_cubes(phi,isocontour)
     verts = verts*np.diff(Func.dimensions).flatten()/(res-1) + Func.dimensions[:,0]
     surf = Mesh(np.zeros(faces.shape[0], dtype=Mesh.dtype))
     for i, f in enumerate(faces):
             for j in range(3):
                     surf.vectors[i][j] = verts[f[j],:]
-    surf.save('Opt_Mesh.stl')
+    surf.save(mesh_name)
     print('Number of Verices: ',len(verts))
 
 spacing = np.max(np.diff(Func.cps[:,0:3],axis=0),axis=0)/Func.Bbox_diag

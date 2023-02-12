@@ -24,7 +24,7 @@ border = 0.15
 
 soft_const = True
 L1 = 5e-1 # Curvature weighting
-L2 = 1e1 # Normal weighting
+L2 = 1e2 # Normal weighting
 L3 = 1e3 # Surface weighting
 
 ### Fuselage ###
@@ -58,10 +58,10 @@ tol = 5e-4
 filename = 'stl-files/Wing_25k.stl'
 
 ### BUNNY ###
-# max_cps = 28
-# flag = 'Bunny'
-# tol = 5e-5
-# filename = 'stl-files/Bunny_500.stl'
+max_cps = 28
+flag = 'Bunny'
+tol = 1e-5
+filename = 'stl-files/Bunny_100000.stl'
 
 ### HEART Study ###
 # max_cps = 34
@@ -234,7 +234,8 @@ Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
 print('Scaled Energies: ',Func.E_scaled)
 # pickle.dump(Func, open( "SAVED_DATA/Opt_{}_.pkl".format(flag),"wb"))
-pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
+# pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
+pickle.dump(Func, open( "Opt_{}_For_OffSurface3.pkl".format(flag),"wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
 # print(num_cps_pts)
