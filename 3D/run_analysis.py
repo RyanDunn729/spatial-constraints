@@ -621,7 +621,7 @@ if mode == 'Comp_time':
     ep_data = [0.5, 1.0]
     k = 10
     rho = 20
-    num_samples = 1000
+    num_samples = 100000
     bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
 
     ### Evaluate points on the surface (MAY FAVOR KDTREES) ###
@@ -696,7 +696,7 @@ if mode == 'Comp_time':
 
     ax1.loglog(pt_data,time_Bsplines_1000,'.-',label=('Our Method'),color='tab:blue',markersize=10,linewidth=2)
     ax1.loglog(pt_data,time_KSmethod,'.--',label=('Explicit Method'),color='tab:orange',markersize=10,linewidth=2)
-    ax1.loglog(pt_data,time_FredMethod,'.:',label=('Previous Method'),color='tab:green',markersize=10,linewidth=2)
+    ax1.loglog(pt_data,time_FredMethod,'.:',label=('Lin et al.'),color='tab:green',markersize=10,linewidth=2)
 
     # Worst Case (n^(1-1/d))
     # ax1.loglog(pt_data, np.power(np.array(pt_data),1-1/3)*time_KSmethod[0]/(pt_data[0]**(1-1/3)),'r-',linewidth=6,alpha=0.50)
