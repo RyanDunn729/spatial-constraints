@@ -1,42 +1,88 @@
 clear all; close all; clc;
 
-figure('Position',[100 100 1600 600])
+max_haus = 0.06;
+
+figure('Position',[100 100 992.5 310])
 counter = 1;
 for i = -0.01:0.005:0.01
-    subplot(1,5,counter)
     exact_file = sprintf('SAVED_DATA/Hick_Bunny_%0.3f.stl',i);
     sample_file = sprintf('SAVED_DATA/Opt_Mesh_%0.3f.stl',i);
     [vertices1, faces1] = read_ply(exact_file);
     [vertices2, faces2] = read_ply(sample_file);
+
     bbox_diag = 0.25083813;
-    % Calculate the Hausdorff distance
-%     hausdorff_distance = HausdorffDist(vertices1, faces1, vertices2, faces2);
     [nearest_indices,~] = knnsearch(vertices1, vertices2);
     hausdorff_distance = sqrt(sum((vertices2 - vertices1(nearest_indices, :)).^2, 2))/bbox_diag;
+    
 %     max(hausdorff_distance)
+%     hausdorff_distances = sort(hausdorff_distance(:));
+%     num_values = numel(hausdorff_distances);
+%     lower_90_index = round(0.9 * num_values);
+%     lower_90_hausdorff_distances = hausdorff_distances(1:lower_90_index);
+%     max(lower_90_hausdorff_distances)
+    
+    figure(1)
+    subplot(1,5,counter)
     trisurf(faces2, vertices2(:,1), -vertices2(:,3), vertices2(:,2), hausdorff_distance, 'FaceColor', 'interp', 'EdgeColor', 'none');
-    % Add a colorbar to the plot
-%     caxis([0, max(hausdorff_distance)]);
-%     colorbar;
+    colormap(parula);
+    caxis([0, 0.1])
     view(-25,20)
-%     xlabel('x')
-%     ylabel('y')
-%     zlabel('z')
     axis equal off
     xlim([-0.11407467  0.08569895]);
     ylim(-1*[0.07957499 -0.08370341 ]);
     zlim([ 0.01074063  0.21015246]);
     set(gca, 'XTick', [], 'YTick', [], 'ZTick', [])
     set(gcf, 'Color', 'white')
-    sub_pos = get(gca, 'Position')
-%     sub_pos(3) = sub_pos(3) * 2;
-%     sub_pos(4) = sub_pos(4) * 2;
+    if counter == 5
+        c = colorbar('TickLabelInterpreter', 'latex');
+        c.Location = 'eastoutside';
+        caxis([0, max_haus])
+        c.Position = [0.88 0.2 0.01 0.6];
+    end
+    sub_pos = get(gca, 'Position');
+    sub_pos(1:2) = sub_pos(1:2) - 0.1*ones(1,2);
+    sub_pos(3:4) = sub_pos(3:4) + 0.1*ones(1,2);
     set(gca, 'Position', sub_pos);
+    switch counter
+        case {2,4}
+            sub_title = sprintf('%0.3f',i);
+        case {1,5}
+            sub_title = sprintf('%0.2f',i);
+        otherwise
+            sub_title = sprintf('%0.1f',i);
+    end
+    title(sub_title,'FontSize',10,'Interpreter','latex')
+    
+%     figure
+%     trisurf(faces2, vertices2(:,1), -vertices2(:,3), vertices2(:,2), hausdorff_distance, 'FaceColor', 'interp', 'EdgeColor', 'none');
+%     colormap(parula);
+%     caxis([0, max_haus])
+%     if counter == 5
+%         c = colorbar;
+%         c.Position = [0.9 0.2 0.03 0.6];
+%         c.FontSize = 14;
+%     end
+%     view(-25,20)
+%     axis equal off
+%     xlim([-0.11407467  0.08569895]);
+%     ylim(-1*[0.07957499 -0.08370341 ]);
+%     zlim([ 0.01074063  0.21015246]);
+%     set(gca, 'XTick', [], 'YTick', [], 'ZTick', [])
+%     set(gcf, 'Color', 'white')
+%     
+%     plot_pos = get(gca, 'Position');
+%     set(gca, 'Position', [-0.2 -0.2 1.4 1.4]);
+%     
+%     set(gcf, 'PaperSize', [8 8]);
+%     print(gcf, '-dpdf','-painters','-fillpage', sprintf("PDF_figures/Hausdorff%0.3f.pdf",i))
+    
     counter = 1 + counter;
 end
-colormap(parula);
-c = colorbar;
-caxis([0, 0.689])
+
+figure(1)
+set(gcf, 'PaperSize', [6 2]);
+% print(gcf, '-dpdf','-bestfit', "PDF_figures/Hausdorff.pdf")
+print(gcf, '-dpdf','-painters','-fillpage', "PDF_figures/Hausdorff.pdf")
 
 function [verts,faces] = read_ply(filename)
 [stlstruct,~] = stlread(filename);
@@ -44,25 +90,4 @@ function [verts,faces] = read_ply(filename)
 % Extract the vertices and faces
 verts = stlstruct.Points;
 faces = stlstruct.ConnectivityList;
-end
-
-function hausdorff_distance = HausdorffDist(vertices1, faces1, vertices2, faces2)
-    % Compute the distances from each vertex in mesh 1 to mesh 2
-    distances1 = min_distance(vertices1, vertices2, faces2);
-    
-    % Compute the distances from each vertex in mesh 2 to mesh 1
-    distances2 = min_distance(vertices2, vertices1, faces1);
-    
-    % Compute the Hausdorff distance as the maximum of the two distances
-    hausdorff_distance = max(max(distances1), max(distances2));
-end
-
-function distances = min_distance(vertices1, vertices2, faces2)
-    % Initialize the distances
-    distances = zeros(size(vertices1, 1), 1);
-    
-    % Compute the distances from each vertex in mesh 1 to mesh 2
-    [nearest_indices, ~] = knnsearch(vertices2, vertices1);
-    nearest_vertices = vertices2(nearest_indices, :);
-    distances = vecnorm(vertices1 - nearest_vertices, 2, 2);
 end
