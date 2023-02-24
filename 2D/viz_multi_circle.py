@@ -4,12 +4,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pickle
+
 sns.set(style='ticks')
-from matplotlib import rc
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
-plt.rc('legend', fontsize=12)    # legend fontsize
-plt.rc('axes', labelsize=18)    # fontsize of the x and y labels
+
+def set_fonts():
+    from matplotlib import rc
+    rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+    rc('text', usetex=True)
+    plt.rc('legend', fontsize=14)    # legend fontsize
+    plt.rc('axes', labelsize=18)    # fontsize of the x and y labels
+set_fonts()
 
 Func = pickle.load( open( "SAVED_DATA/_Saved_Multio4.pkl", "rb" ) )
 gold = (198/255, 146/255, 20/255)
@@ -31,11 +35,11 @@ xx,yy = np.meshgrid(np.linspace(x[0],x[1],res),
 pts = np.stack((xx.flatten(),yy.flatten()),axis=1)
 phi = Hicken_eval(pts,KDTree(Func.exact[0]),Func.exact[1],15,10)
 phi = phi.reshape(res,res)
-ax1.pcolormesh(xx,yy,phi,shading='gouraud',cmap='Greys', vmin=-5, vmax=5)
+ax1.pcolormesh(xx,yy,phi,shading='gouraud',cmap='binary', vmin=-5, vmax=5)
 for i in range(4):
     rng = np.arange(10000*i,10000*(i+1)-1)
     if i==0:
-        ax1.plot(Func.exact[0][rng,0],Func.exact[0][rng,1],'k-',label='Boundaries',linewidth=2)
+        ax1.plot(Func.exact[0][rng,0],Func.exact[0][rng,1],'k-',label='Boundaries $\Gamma$',linewidth=2)
     else:
         ax1.plot(Func.exact[0][rng,0],Func.exact[0][rng,1],'k-',linewidth=2)
 ax1.plot([x[0],x[1]],[0,0],color='cyan',linewidth=2)
@@ -90,9 +94,9 @@ for rng in max_rngs:
     ind = phi_ex==np.max(phi_ex[ind])
     locs = np.vstack((locs,xspan[ind]))  
 
-ax2.plot(xspan,phi,linewidth=2,label='Our Function')
+ax2.plot(xspan,phi,linewidth=2,label='Our function')
 ax2.plot(xspan,phi_ex,'--',linewidth=2,label='Exact signed distance')
-ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Nondifferentiable points')
+ax2.plot(locs,vals,'.',color='tab:red',markersize=15,label='Non-differentiable points')
 ax2.set_xlabel('x')
 ax2.set_ylabel('$\phi$')
 ax2.set_xticks(xticks)
@@ -100,17 +104,13 @@ ax2.set_yticks(yticks)
 # ax2.set_xlim(x[0],x[1])
 ax2.legend(loc='lower center',framealpha=1,edgecolor='black',facecolor='white', fontsize="x-large")
 
-ax1.plot(locs,np.zeros(len(locs)),'.',color='tab:red',markersize=15,label='Nondifferentiable points')
+ax1.plot(locs,np.zeros(len(locs)),'.',color='tab:red',markersize=15,label='Non-differentiable points')
 ax1.legend(loc='lower left',framealpha=1,edgecolor='black',facecolor='white', fontsize="x-large")
 ax2.grid()
 sns.despine()
 plt.tight_layout()
 
-from matplotlib import rc
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
-rc('text', usetex=True)
-plt.rc('legend', fontsize=12)    # legend fontsize
-plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
+set_fonts()
 
 plt.savefig('PDF_figures/multi_circles.pdf',bbox_inches='tight') 
  

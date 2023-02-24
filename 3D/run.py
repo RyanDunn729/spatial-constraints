@@ -19,25 +19,26 @@ print('Imported Packages \n')
 ######### Configurables #########
 dim = 3
 R = 1
-order = 4
+order = 3
 border = 0.15
+exact_filename = None
 
 soft_const = True
-L1 = 5e-1 # Curvature weighting
-L2 = 1e2 # Normal weighting
+L1 = 1e-1 # Curvature weighting
+L2 = 1e1 # Normal weighting
 L3 = 1e3 # Surface weighting
 
 ### Fuselage ###
-max_cps = 44
-flag = 'Fuselage'
-tol = 1e-4
-filename = 'stl-files/Fuselage_25k.stl'
+# max_cps = 44
+# flag = 'Fuselage'
+# tol = 1e-4
+# filename = 'stl-files/Fuselage_25k.stl'
 
 ### Human ###
-max_cps = 34
-flag = 'Human'
-tol = 5e-4
-filename = 'stl-files/Human_25k.stl'
+# max_cps = 34
+# flag = 'Human'
+# tol = 5e-4
+# filename = 'stl-files/Human_25k.stl'
 
 ### Battery ###
 max_cps = 44
@@ -97,10 +98,12 @@ filename = 'stl-files/Bunny_100000.stl'
 # filename = 'stl-files/buddha_100k.stl'
 
 ## HEART For Optimization ###
-# max_cps = 34
-# flag = 'Heart'
-# tol = 1e-4
+max_cps = 34
+flag = 'Heart'
+tol = 1e-4
 # filename = "stl-files/heart_case03_final1.stl"
+# exact_filename = "stl-files/heart_case03_final1.stl"
+filename = "stl-files/heart_case02_v7.stl"
 
 visualize_init = False
 
@@ -128,6 +131,9 @@ if flag == 'Ellipsoid':
     exact = np.stack((e.points(10000),e.unit_pt_normals(10000)))
     surf_pts = e.points(num_pts)
     normals = e.unit_pt_normals(num_pts)
+elif exact_filename is not None:
+    surf_pts, normals = extract_stl_info(filename)
+    exact = extract_stl_info(exact_filename)
 else:
     surf_pts, normals = extract_stl_info(filename)
     exact = extract_stl_info("stl-files/{}_exact.stl".format(flag))
@@ -234,8 +240,8 @@ Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
 print('Scaled Energies: ',Func.E_scaled)
 # pickle.dump(Func, open( "SAVED_DATA/Opt_{}_.pkl".format(flag),"wb"))
-# pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
-pickle.dump(Func, open( "Opt_{}_For_OffSurface3.pkl".format(flag),"wb"))
+pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
+# pickle.dump(Func, open( "Opt_{}_For_OffSurface3.pkl".format(flag),"wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
 # print(num_cps_pts)
