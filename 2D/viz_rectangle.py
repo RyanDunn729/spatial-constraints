@@ -12,6 +12,8 @@ from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
 from modules.Hicken_Method import KS_eval
 
+fig3_data = {}
+
 sns.set()
 tickfontsize = 14
 axisfontsize = 16
@@ -53,18 +55,22 @@ phi_cps = Func.cps[:,2]
 sns.set_style('ticks')
 fig1 = plt.figure(figsize=(7,5),dpi=140)
 ax = plt.axes()
-res = 1000
+res = 500
 uu,vv = np.meshgrid(np.linspace(0,1,res),
                     np.linspace(0,1,res))
 b = Func.Surface.get_basis_matrix(uu.flatten(),vv.flatten(),0,0)
 xx = b.dot(Func.cps[:,0]).reshape(res,res)
 yy = b.dot(Func.cps[:,1]).reshape(res,res)
 phi = b.dot(phi_cps).reshape(res,res)
+fig3_data["xx"] = xx
+fig3_data["yy"] = yy
+fig3_data["phi_energy_minimized"] = phi
+fig3_data["pt_cloud"] = Func.surf_pts
 ax.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
 rect = patches.FancyBboxPatch((-3.5,-4.5), 7,9, boxstyle='round,pad=0,rounding_size=1', 
     linewidth=1.5, alpha=contour_alpha,edgecolor='k',facecolor='none')
 ax.add_patch(rect)
-ax.plot(box2[:,0],box2[:,1],'k-',alpha=contour_alpha,linewidth=1.5,label='Exact SDF')
+ax.plot(box2[:,0],box2[:,1],'k-',alpha=contour_alpha,linewidth=1.5,label='Contours of $d_\Gamma$')
 ax.plot(box3[:,0],box3[:,1],'k-',alpha=contour_alpha,linewidth=1.5)
 ax.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',markersize=5,label='Point cloud')
 CS = ax.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
@@ -103,16 +109,17 @@ fig2 = plt.figure(figsize=(7,5),dpi=140)
 ax = plt.axes()
 dataset = KDTree(Func.surf_pts)
 samples = np.transpose(np.vstack((xx.flatten(),yy.flatten())))
-phi = KS_eval(samples,dataset,Func.normals,k=6,rho=20)
-phi = phi.reshape(res,res)
+phi_init = KS_eval(samples,dataset,Func.normals,k=6,rho=20)
+phi_init = phi_init.reshape(res,res)
+fig3_data["phi_init"] = phi_init
 ax.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
 rect = patches.FancyBboxPatch((-3.5,-4.5), 7,9, boxstyle='round,pad=0,rounding_size=1', 
     linewidth=1.5, alpha=contour_alpha,edgecolor='k',facecolor='none')
 ax.add_patch(rect)
-ax.plot(box2[:,0],box2[:,1],'k-',alpha=contour_alpha,linewidth=1.5,label='Exact SDF')
+ax.plot(box2[:,0],box2[:,1],'k-',alpha=contour_alpha,linewidth=1.5,label='Contours of $d_\Gamma$')
 ax.plot(box3[:,0],box3[:,1],'k-',alpha=contour_alpha,linewidth=1.5)
 ax.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',markersize=5,label='Point cloud')
-CS = ax.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
+CS = ax.contour(xx,yy,phi_init,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
     colors=['tab:orange','tab:green','tab:blue','tab:purple'])
 ax.clabel(CS, CS.levels, inline=True, fontsize=axisfontsize, fmt={-1:'-1',0:'0',1:'1',2:'2'},
     inline_spacing=18, rightside_up=True,
@@ -128,7 +135,7 @@ sns.despine()
 axins = zoomed_inset_axes(ax, 5, loc=5)
 axins.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',linewidth=1)
 axins.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',markersize=10)
-axins.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
+axins.contour(xx,yy,phi_init,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
     colors=['tab:orange','tab:green','tab:blue','tab:purple'])
 axins.set_xlim(2, 2.75)
 axins.set_ylim(-3.75, -3)
@@ -142,5 +149,6 @@ ax.legend(framealpha=1,edgecolor='black',facecolor='white',
 
 set_fonts()
 
+pickle.dump(fig3_data, open("fig3_data.pkl","wb"))
 plt.savefig('PDF_figures/Rectangle_Hicken.pdf',bbox_inches='tight')
 plt.show()

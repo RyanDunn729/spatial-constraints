@@ -15,7 +15,7 @@ rc('text', usetex=True)
 plt.rc('legend', fontsize=12)    # legend fontsize
 plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
-save_mesh = False
+save_mesh = True
 res = 180
 isocontour = 0
 mesh_name = f'Opt_Mesh_{isocontour}.stl'
@@ -28,7 +28,14 @@ dpi = 100
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_100000.pkl", "rb" ) )
 # Func = pickle.load( open( "Opt_Bunny_For_OffSurface1.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
-Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
+
+Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
+mesh_name = 'Opt_armadillo_.stl'
+# Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
+# mesh_name = 'Opt_buddha_.stl'
+# Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
+# mesh_name = 'Opt_dragon_.stl'
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )

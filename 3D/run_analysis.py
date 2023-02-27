@@ -48,7 +48,7 @@ mode = 'Bspline_analysis'
 # mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
 # mode = 'Visualize_lambdas_energies'
-# mode = 'Visualize_lambdas'
+mode = 'Visualize_lambdas'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
@@ -468,6 +468,16 @@ if mode == 'Visualize_lambdas':
     set_fonts()
     plt.savefig('PDF_figures/Lp.pdf',bbox_inches='tight')
 
+    fig6_data = {}
+    fig6_data["RMS_local_L1"] = RMS_local_L1
+    fig6_data["RMS_surf_L1"] = RMS_surf_L1
+    fig6_data["RMS_local_L2"] = RMS_local_L2
+    fig6_data["RMS_surf_L2"] = RMS_surf_L2
+    fig6_data["RMS_local_L3"] = RMS_local_L3
+    fig6_data["RMS_surf_L3"] = RMS_surf_L3
+    fig6_data["lambda_range"] = L1_data
+    pickle.dump(fig6_data, open("fig6_data.pkl","wb"))
+
 if mode == 'Plot_data':
     res = 30
     ep_max = 5 # BBox diag %
@@ -622,6 +632,17 @@ if mode == 'Hicken_v_Splines':
     if save_figures:
         plt.savefig('PDF_figures/EXvBb.pdf',bbox_inches='tight')
     
+    try:
+        fig8_data = pickle.load(open("fig8_data.pkl","rb"))
+    except:
+        fig8_data = {}
+    fig8_data["our_onsurf"] = RMS_err_Bsplines_fine
+    fig8_data["explicit_onsurf"] = RMS_err_KSmethod
+    fig8_data["our_offsurf"] = ep_error_Bsplines
+    fig8_data["explicit_offsurf"] = ep_error_KSmethod
+    fig8_data["Ngamma_range"] = pt_data
+    pickle.dump(fig8_data,open("fig8_data.pkl","wb"))
+    
 if mode == 'Comp_time':
     ep_data = [0.5, 1.0]
     k = 10
@@ -721,6 +742,15 @@ if mode == 'Comp_time':
     plt.tight_layout()
 
     plt.savefig('PDF_figures/Comp_time.pdf',bbox_inches='tight')
+
+    try:
+        fig8_data = pickle.load(open("fig8_data.pkl","rb"))
+    except:
+        fig8_data = {}
+    fig8_data["time_ours"] = time_Bsplines_1000
+    fig8_data["time_explicit"] = time_KSmethod
+    fig8_data["time_Lin_et_al"] = time_FredMethod
+    pickle.dump(fig8_data,open("fig8_data.pkl","wb"))
 
 
 if mode == 'normalized_Hicken_v_Splines':
