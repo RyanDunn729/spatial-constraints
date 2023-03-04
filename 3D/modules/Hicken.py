@@ -40,7 +40,7 @@ def Hicken_deriv_eval(pts,dataset,norm_vec,k,rho):
 def KS_eval(pts,KDTree,norm_vec,k,rho):
     distances,indices = KDTree.query(pts,k=k)
     if k==1:
-        phi = (KDTree.data[indices] - pts)*norm_vec[indices]
+        phi = np.einsum('ij,ij->i',(KDTree.data[indices] - pts),norm_vec[indices])
         return phi
     d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
     exp = np.exp(-rho*d_norm)
