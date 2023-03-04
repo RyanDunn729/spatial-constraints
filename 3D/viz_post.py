@@ -17,7 +17,7 @@ plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
 
 save_mesh = True
 res = 180
-isocontour = -0.01
+isocontour = 0
 mesh_name = f'Opt_Mesh_{isocontour}.stl'
 
 size = (7.5,6.5)
@@ -26,7 +26,16 @@ dpi = 100
 # Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_100000.pkl", "rb" ) )
-Func = pickle.load( open( "Opt_Bunny_For_OffSurface1.pkl", "rb" ) )
+# Func = pickle.load( open( "Opt_Bunny_For_OffSurface1.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
+# Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
+
+Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
+mesh_name = 'Opt_armadillo_.stl'
+# Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
+# mesh_name = 'Opt_buddha_.stl'
+# Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
+# mesh_name = 'Opt_dragon_.stl'
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_Fuselage_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Human_.pkl", "rb" ) )
@@ -35,14 +44,14 @@ Func = pickle.load( open( "Opt_Bunny_For_OffSurface1.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Battery_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
 
-print(Func.num_cps)
+print('num_cps: ',Func.num_cps)
 print(np.product(Func.num_cps))
-print(Func.dimensions)
-print(Func.Bbox_diag)
-exit()
+print('dimensions: ',Func.dimensions)
+print('Bbox_diag: ',Func.Bbox_diag)
+
 ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-print(np.mean(data))
-print(len(Func.surf_pts))
+print('epsilon error: ',np.mean(data))
+print('num_surf_pts: ',len(Func.surf_pts))
 
 gold = (198/255, 146/255, 20/255)
 

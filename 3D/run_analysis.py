@@ -30,7 +30,9 @@ save_figures = True
 # Penalization
 # file = 'o3Bunny40'
 # file = 'o4Bunny35'
+# file = 'o3Bunny28'
 file = 'o4Bunny28'
+# file = 'o5Bunny28'
 # file = 'o5Bunny40'
 # file = 'o6Bunny40' 
 # file = 'o4Bunny34'
@@ -41,18 +43,18 @@ file = 'o4Bunny28'
 ### Plot Data Mode ###
 mode = 'Hicken_analysis'
 isocontour = 0
-# mode = 'Bspline_analysis'
+mode = 'Bspline_analysis'
 # mode = 'Bspline_analysis_vary_L1'
 # mode = 'Bspline_analysis_vary_L2'
 # mode = 'Bspline_analysis_vary_L3'
 # mode = 'Visualize_lambdas_energies'
-# mode = 'Visualize_lambdas'
+mode = 'Visualize_lambdas'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
-# mode = 'Hicken_v_Splines'
+mode = 'Hicken_v_Splines'
 # mode = 'normalized_Hicken_v_Splines'
-# mode = 'Comp_time'
+mode = 'Comp_time'
 # mode = 'plot_point_cloud'
 print(mode)
 
@@ -94,7 +96,7 @@ if mode=='Hicken_analysis':
     file = file[2:-2]
     res = 180
     k = 20
-    rho = 1e-3
+    rho = 1e-1
     for num_pts in [100000]:
         if file[2:-2] =='Ellipsoid':
             surf_pts = e.points(num_pts)
@@ -108,7 +110,7 @@ if mode=='Hicken_analysis':
         lower = np.min(surf_pts,axis=0)
         upper = np.max(surf_pts,axis=0)
         diff = upper-lower
-        dimensions = np.stack((lower-diff*border, upper+diff*border),axis=1)
+        dimensions = np.stack((lower, upper),axis=1)
         x = dimensions[0]
         y = dimensions[1]
         z = dimensions[2]
@@ -116,20 +118,23 @@ if mode=='Hicken_analysis':
         pts[:, 0] = np.einsum('i,j,k->ijk', np.linspace(x[0],x[1],res), np.ones(res),np.ones(res)).flatten()
         pts[:, 1] = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(y[0],y[1],res),np.ones(res)).flatten()
         pts[:, 2] = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(z[0],z[1],res)).flatten()
-        phi = KS_eval(pts,KDTree(surf_pts),normals,k,rho)
+        dataset = KDTree(surf_pts)
+        phi = KS_eval(pts,dataset,normals,k,rho)
         phi = phi.reshape((res,res,res))/np.linalg.norm(diff)
         for isocontour in [-0.005,-0.01,0,0.005,0.01]:
             verts, faces,_,_ = marching_cubes(phi, isocontour)
             verts = verts*np.diff(dimensions).flatten()/(res-1) + dimensions[:,0]
+            # d_i,_ = dataset.query(verts,k=1)
+            # print('Exact representation RMS Error: ',np.sqrt(np.mean((abs(isocontour)-d_i))**2)/len(d_i))
             surf = Mesh(np.zeros(faces.shape[0], dtype=Mesh.dtype))
             for i, f in enumerate(faces):
                     for j in range(3):
                             surf.vectors[i][j] = verts[f[j],:]
-            surf.save('Hick_'+file+'_' + str(isocontour) + '.stl')
+            surf.save('SAVED_DATA/Hick_'+file+'_' + str(isocontour) + '.stl')
             print('Finished ',str(isocontour),' point Hicken File')
 
 if mode=='Bspline_analysis':
-    pt_data = [pt_data[group-1], pt_data[-group]]
+    # pt_data = [pt_data[group-1], pt_data[-group]]
     m = model(max_cps,R,border,dim,tol,exact,soft_const)
     for num_pts in pt_data:
         if file[2:-2] =='Ellipsoid':
@@ -463,6 +468,16 @@ if mode == 'Visualize_lambdas':
     set_fonts()
     plt.savefig('PDF_figures/Lp.pdf',bbox_inches='tight')
 
+    fig6_data = {}
+    fig6_data["RMS_local_L1"] = RMS_local_L1
+    fig6_data["RMS_surf_L1"] = RMS_surf_L1
+    fig6_data["RMS_local_L2"] = RMS_local_L2
+    fig6_data["RMS_surf_L2"] = RMS_surf_L2
+    fig6_data["RMS_local_L3"] = RMS_local_L3
+    fig6_data["RMS_surf_L3"] = RMS_surf_L3
+    fig6_data["lambda_range"] = L1_data
+    pickle.dump(fig6_data, open("fig6_data.pkl","wb"))
+
 if mode == 'Plot_data':
     res = 30
     ep_max = 5 # BBox diag %
@@ -497,26 +512,26 @@ if mode == 'Plot_data':
 
 if mode == 'Comp_err_order':
     # Bunny ONLY
-    pt_data_pen = [77,108,201,252,412,677,1002,2002,3002,4002,5002,10002] #,25002,40802,63802,100002]
+    pt_data = [500,808,1310,2120,3432,5555,9000,14560,25000,38160,64000,100000]
 
     orders = ['o3','o4','o5']
 
-    max_err_pen = np.zeros((len(orders),len(pt_data_pen)))
-    RMS_err_pen = np.zeros((len(orders),len(pt_data_pen)))
+    max_err_pen = np.zeros((len(orders),len(pt_data)))
+    RMS_err_pen = np.zeros((len(orders),len(pt_data)))
     styles = ['-','--',':']
     sns.set(style='ticks')
     plt.figure(figsize=(7,6),dpi=180)
     ax = plt.axes()
     for j,order in enumerate(orders):
-        for i,num_pts in enumerate(pt_data_pen):
-            Func = pickle.load( open( "SAVED_DATA/Opt_"+order+"Bunny_pen40_"+str(num_pts)+".pkl", "rb" ) )
+        for i,num_pts in enumerate(pt_data):
+            Func = pickle.load( open( "SAVED_DATA/Opt_"+order+"Bunny28_"+str(num_pts)+".pkl", "rb" ) )
             phi = Func.eval_surface()
             max_err_pen[j,i] = np.max(abs(phi))/Func.Bbox_diag
             RMS_err_pen[j,i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
         print('Finished order '+str(order[1])+' dataset')
-        ax.loglog(pt_data_pen,RMS_err_pen[j,:],('bs'+styles[j]),linewidth=2,markersize=6,label=('Degree '+str(int(order[1])-1)+' RMS'))
+        ax.loglog(pt_data,RMS_err_pen[j,:],('bs'+styles[j]),linewidth=2,markersize=6,label=('Degree '+str(int(order[1])-1)+' RMS'))
     for j,order in enumerate(orders):
-        ax.loglog(pt_data_pen,max_err_pen[j,:],('r.'+styles[j]),linewidth=2,markersize=9,label=('Degree '+str(int(order[1])-1)+' Max'))
+        ax.loglog(pt_data,max_err_pen[j,:],('r.'+styles[j]),linewidth=2,markersize=9,label=('Degree '+str(int(order[1])-1)+' Max'))
     ax.set_xlabel("$N_{\Gamma}$",fontsize=14)
     ax.set_ylabel("Normalized Error",fontsize=14)
     # ax.set_title('Surface Error for '+file+' model (diag ='+str(np.round(Func.Bbox_diag,decimals=2))+')')
@@ -578,7 +593,7 @@ if mode == 'Hicken_v_Splines':
     ax1.loglog(pt_data,RMS_err_Bsplines_fine,'.-',color='tab:blue',markersize=14,linewidth=2,label=('Our Method'))
     ax1.loglog(pt_data,RMS_err_KSmethod,'.--',color='tab:orange',markersize=14,linewidth=2,label=('Explicit Method'))
     ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
-    ax1.set_ylabel('RMS Error',fontsize=14)
+    ax1.set_ylabel('On-surface RMS error',fontsize=14)
     ax1.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
     ax1.set_ylim(1e-4,2e-2)
     ax1.grid()
@@ -608,7 +623,7 @@ if mode == 'Hicken_v_Splines':
             ax2.loglog(pt_data,ep_error_KSmethod[:,i],styles_KSmethod[i],markersize=7,linewidth=2,color='tab:orange',
                 label=('Explicit method ($\pm${})'.format(ep/100)))
     ax2.set_xlabel('$N_{\Gamma}$',fontsize=14)
-    ax2.set_ylabel('RMS Error',fontsize=14)
+    ax2.set_ylabel('Off-surface RMS error',fontsize=14)
     ax2.set_ylim(1e-4,2e-2)
     ax2.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
     ax2.grid()
@@ -616,6 +631,17 @@ if mode == 'Hicken_v_Splines':
     plt.tight_layout()
     if save_figures:
         plt.savefig('PDF_figures/EXvBb.pdf',bbox_inches='tight')
+    
+    try:
+        fig8_data = pickle.load(open("fig8_data.pkl","rb"))
+    except:
+        fig8_data = {}
+    fig8_data["our_onsurf"] = RMS_err_Bsplines_fine
+    fig8_data["explicit_onsurf"] = RMS_err_KSmethod
+    fig8_data["our_offsurf"] = ep_error_Bsplines
+    fig8_data["explicit_offsurf"] = ep_error_KSmethod
+    fig8_data["Ngamma_range"] = pt_data
+    pickle.dump(fig8_data,open("fig8_data.pkl","wb"))
     
 if mode == 'Comp_time':
     ep_data = [0.5, 1.0]
@@ -688,7 +714,7 @@ if mode == 'Comp_time':
 
     sns.set(style='ticks')
     set_fonts()
-    fig = plt.figure(figsize=(5.2,5),dpi=160)
+    fig = plt.figure(figsize=(5,5),dpi=160)
     ax1 = plt.axes()
     ax1.loglog(pt_data,bf_OM(pt_data), 'k-',linewidth=6,alpha=0.13)
     ax1.loglog(pt_data,np.exp(bf_EM(np.log(pt_data))), 'k-',linewidth=6,alpha=0.13)
@@ -711,10 +737,20 @@ if mode == 'Comp_time':
     ax1.set_ylabel('Evaluation Time per point (sec)',fontsize=14)
     ax1.legend(fontsize=14,framealpha=1,edgecolor='black',facecolor='white')
     ax1.grid()
+    ax1.set_ylim(1e-6,2e-2)
     sns.despine()
     plt.tight_layout()
 
     plt.savefig('PDF_figures/Comp_time.pdf',bbox_inches='tight')
+
+    try:
+        fig8_data = pickle.load(open("fig8_data.pkl","rb"))
+    except:
+        fig8_data = {}
+    fig8_data["time_ours"] = time_Bsplines_1000
+    fig8_data["time_explicit"] = time_KSmethod
+    fig8_data["time_Lin_et_al"] = time_FredMethod
+    pickle.dump(fig8_data,open("fig8_data.pkl","wb"))
 
 
 if mode == 'normalized_Hicken_v_Splines':

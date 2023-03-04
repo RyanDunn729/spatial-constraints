@@ -118,6 +118,7 @@ class MyProblem(object):
         rangex = self.dimensions[0]
         rangey = self.dimensions[1]
         rangez = self.dimensions[2]
+        # Order 3, index 0.5: basis = [1/2, 1/2]
         # Order 4, index 1.0: basis = [1/6, 4/6, 1/6]
         # Order 5, index 1.5: basis = [1/24, 11/24, 11/24, 1/24]
         # Order 6, index 2.0: basis = [1/120, 26/120, 66/120, 26/120, 1/120]
