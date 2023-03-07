@@ -54,9 +54,9 @@ class soft_objective(ExplicitComponent):
         elif dim==2:
             o1 = L1*inputs['dA']/inputs['A']*np.sum(inputs['Fnorm']**2)/num_samp
 
-        print('Normalized E1: ',o1/L1)
-        print('Normalized E2: ',o2/L2)
-        print('Normalized E3: ',o3/L3)
+        print('LrEr: ',o1)
+        print('LnEn: ',o2)
+        print('LpEp: ',o3)
 
         outputs['soft_objective'] = o1+o2+o3
 

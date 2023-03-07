@@ -19,13 +19,13 @@ print('Imported Packages \n')
 dim = 2
 order = 4
 R = 1
-max_cps = 64
+max_cps = 40
 border = 0.3
 
 soft_const = True
-L1 = 2e-2
+L1 = 1e-3
 L2 = 10.
-L3 = 100.
+L3 = 1e3
 
 tol = 1e-4
 
@@ -56,8 +56,26 @@ ex_pts = e.points(num_exact)
 ex_norms = e.unit_pt_normals(num_exact)
 exact = np.stack((ex_pts,ex_norms))
 
+exact = pickle.load(open("boundary_data.pkl","rb"))
+pts, normals = exact
+x = np.asarray([262403., 262553., 262703., 262853., 263003., 263153., 263303.,
+                263453., 263603., 263753., 263903., 264053., 264203., 264353.,
+                264503., 264653., 264803., 264953., 265103., 265253.])
+y = np.asarray([6504239., 6504389., 6504539., 6504689., 6504839., 6504989.,
+                6505139., 6505289., 6505439., 6505589., 6505739., 6505889.,
+                6506039., 6506189., 6506339., 6506489., 6506639., 6506789.,
+                6506939., 6507089.])
+x_min_d = x.min()
+y_min_d = y.min()
+x -= x_min_d
+y -= y_min_d
+x /= np.max(x)/10
+y /= np.max(y)/10
+custom_dimensions = np.array([[x.min(), x.max()],
+                              [y.min(), y.max()],])
+
 ######### Initialize Volume #########
-Func = MyProblem(exact, pts, normals, max_cps, R, border, order)
+Func = MyProblem(exact, pts, normals, max_cps, R, border, order, custom_dimensions=custom_dimensions)
 scaling, dA, A, bases_surf, bases_curv = Func.get_values()
 Func.a = a
 Func.b = b
@@ -122,7 +140,7 @@ model.add_subsystem('Objective_Group', objective, promotes=['*'])
 if not soft_const:
     model.add_subsystem('Constraints_Group', constraint, promotes=['*'])
 
-Prob.model.add_design_var('phi_cps',lower=-1,upper=1)
+Prob.model.add_design_var('phi_cps',lower=-2,upper=2)
 if soft_const:
     Prob.model.add_objective('soft_objective',scaler=1)
 else:
@@ -162,5 +180,11 @@ Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
-print('Surface error: ', np.sqrt(np.sum(phi**2)/len(Func.exact[0])))
+phi = phi/Func.Bbox_diag
+print('Surface error (rel): \n',
+        'Max: ',np.max(phi),'\n',
+        'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
+print('Surface error (units): \n',
+        'Max: ',Func.Bbox_diag*np.max(phi),'\n',
+        'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
 print('END')

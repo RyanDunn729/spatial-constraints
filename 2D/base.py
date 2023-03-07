@@ -21,7 +21,7 @@ class MyProblem(object):
         self.Bbox_diag = np.linalg.norm(diff)
         self.dimensions = np.stack((lower-diff*border, upper+diff*border),axis=1)
         self.A = np.product(np.diff(self.dimensions))
-        dxy = np.diff(self.dimensions).flatten()/self.Bbox_diag
+        dxy = np.diff(self.dimensions).flatten()
 
         # Scale the resolutions of cps and hess samples
         frac = dxy / np.max(dxy)
@@ -49,7 +49,13 @@ class MyProblem(object):
             np.linspace(self.dimensions[1,0], self.dimensions[1,1], num_hess[1]),
             np.linspace(self.dimensions[0,0], self.dimensions[0,1], num_hess[0]))
         hess_pts = np.stack((xx.flatten(),yy.flatten(),),axis=1)
-        self.u['hess'], self.v['hess'] = self.spatial_to_parametric(hess_pts)
+        hess_pts = self.cps[:,0:2]
+        u,v = self.spatial_to_parametric(hess_pts)
+        u = np.min(np.vstack((np.ones(len(u)),u)),axis=0)
+        u = np.max(np.vstack((np.zeros(len(u)),u)),axis=0)
+        v = np.min(np.vstack((np.ones(len(v)),v)),axis=0)
+        v = np.max(np.vstack((np.zeros(len(v)),v)),axis=0)
+        self.u['hess'], self.v['hess'] = u,v
 
         ### Get Scaling Values ###
         self.dA = self.A/(np.product(num_hess))

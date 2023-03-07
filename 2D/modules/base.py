@@ -5,7 +5,7 @@ import seaborn as sns
 import numpy as np
 
 class MyProblem(object):
-    def __init__(self, exact, surf_pts, normals, max_cps, R, border, order):
+    def __init__(self, exact, surf_pts, normals, max_cps, R, border, order, custom_dimensions=None):
         k = 6 # Num of nearest points to garuntee interior or exterior point
         self.order = order
         self.u = {}
@@ -20,6 +20,8 @@ class MyProblem(object):
         diff = upper-lower
         self.Bbox_diag = np.linalg.norm(diff)
         self.dimensions = np.stack((lower-diff*border, upper+diff*border),axis=1)
+        if custom_dimensions is not None:
+            self.dimensions = custom_dimensions
         self.A = np.product(np.diff(self.dimensions))
         dxy = np.diff(self.dimensions).flatten()/self.Bbox_diag
 
@@ -113,7 +115,7 @@ class MyProblem(object):
         d_norm = np.transpose(distances.T - distances[:,0]) + 1e-20
         exp = np.exp(-rho*d_norm)
         Dx = dataset.data[indices] - np.reshape(cps[:,0:2],(np.product(self.num_cps),1,2))
-        phi = np.einsum('ijk,ijk,ij,i->i',Dx,self.exact[1][indices],exp,1/np.sum(exp,axis=1))
+        phi = np.einsum('ijk,ijk,ij->i',Dx,self.exact[1][indices],exp)/np.sum(exp,axis=1)
         phi += 1e-5*(2*np.random.rand(np.product(self.num_cps))-1)
         cps[:,2] = phi/self.Bbox_diag
         return cps
