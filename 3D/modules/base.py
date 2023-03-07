@@ -182,6 +182,72 @@ class MyProblem(object):
             RMS_local[i] = np.sqrt(np.mean( (abs(phi)-phi_ex)**2  ))
         return np.linspace(-bbox_perc,bbox_perc,res), RMS_local/self.Bbox_diag
 
+    def check_local_max_error(self,bbox_perc,res,num_samp=None):
+        from modules.Hicken import KS_eval
+        if num_samp is None:
+            num_samp = len(self.surf_pts)
+        ep_max = bbox_perc*self.Bbox_diag / 100
+        ep_range = np.linspace(-ep_max,ep_max,res)
+        dataset = KDTree(self.exact[0])
+        MAX_local = np.zeros(len(ep_range))
+        np.random.seed(1)
+        rng = np.random.default_rng()
+        indx = rng.choice(np.size(self.exact[0],0), size=num_samp, replace=False)
+        sample_pts = self.exact[0][indx,:]
+        sample_normals = self.exact[1][indx,:]
+        for i,ep in enumerate(ep_range):
+            i_pts = sample_pts + ep*sample_normals
+            u,v,w = self.spatial_to_parametric(i_pts)
+            b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
+            phi = b.dot(self.cps[:,3])
+            phi_ex,_ = dataset.query(i_pts,k=1)
+            MAX_local[i] = np.max(abs(abs(phi)-phi_ex))
+        return np.linspace(-bbox_perc,bbox_perc,res), MAX_local/self.Bbox_diag
+
+    def check_local_RMS_error_via_hicken(self,bbox_perc,res,num_samp=None):
+        from modules.Hicken import KS_eval
+        if num_samp is None:
+            num_samp = len(self.surf_pts)
+        ep_max = bbox_perc*self.Bbox_diag / 100
+        ep_range = np.linspace(-ep_max,ep_max,res)
+        dataset = KDTree(self.exact[0])
+        RMS_local = np.zeros(len(ep_range))
+        np.random.seed(1)
+        rng = np.random.default_rng()
+        indx = rng.choice(np.size(self.exact[0],0), size=num_samp, replace=False)
+        sample_pts = self.exact[0][indx,:]
+        sample_normals = self.exact[1][indx,:]
+        for i,ep in enumerate(ep_range):
+            i_pts = sample_pts + ep*sample_normals
+            u,v,w = self.spatial_to_parametric(i_pts)
+            b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
+            phi = b.dot(self.cps[:,3])
+            phi_ex = KS_eval(i_pts,dataset,self.exact[1],1,1)
+            RMS_local[i] = np.sqrt(np.mean( (phi-phi_ex)**2  ))
+        return np.linspace(-bbox_perc,bbox_perc,res), RMS_local/self.Bbox_diag
+
+    def check_local_max_error_via_hicken(self,bbox_perc,res,num_samp=None):
+        from modules.Hicken import KS_eval
+        if num_samp is None:
+            num_samp = len(self.surf_pts)
+        ep_max = bbox_perc*self.Bbox_diag / 100
+        ep_range = np.linspace(-ep_max,ep_max,res)
+        dataset = KDTree(self.exact[0])
+        MAX_local = np.zeros(len(ep_range))
+        np.random.seed(1)
+        rng = np.random.default_rng()
+        indx = rng.choice(np.size(self.exact[0],0), size=num_samp, replace=False)
+        sample_pts = self.exact[0][indx,:]
+        sample_normals = self.exact[1][indx,:]
+        for i,ep in enumerate(ep_range):
+            i_pts = sample_pts + ep*sample_normals
+            u,v,w = self.spatial_to_parametric(i_pts)
+            b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
+            phi = b.dot(self.cps[:,3])
+            phi_ex = KS_eval(i_pts,dataset,self.exact[1],1,1)
+            MAX_local[i] = np.max(abs(abs(phi)-phi_ex))
+        return np.linspace(-bbox_perc,bbox_perc,res), MAX_local/self.Bbox_diag
+
     def get_energy_terms(self,Prob):
         L = Prob['lambdas']
         E = np.zeros(3)
