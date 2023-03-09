@@ -23,7 +23,6 @@ order = 3
 border = 0.15
 exact_filename = None
 
-soft_const = True
 L1 = 1e-1 # Curvature weighting
 L2 = 1e1 # Normal weighting
 L3 = 1e3 # Surface weighting
@@ -173,40 +172,20 @@ comp = curv_sampling(dim=dim,num_cps=num_cps_pts,num_pts=num_hess_pts,
 objective.add_subsystem('Curvature_Samples',comp,promotes=['*'])
 comp = assm_hess(dim=dim,num_pts=num_hess_pts)
 objective.add_subsystem('Assemble_Hessians',comp,promotes=['*'])
-if not soft_const:
-    comp = Curvature_Objective()
-    objective.add_subsystem('Curvature',comp,promotes=['*'])
-elif soft_const:
-    comp = surf_sampling(num_cps=num_cps_pts,num_pts=num_surf_pts,dim=dim,
-                        scaling=scaling,bases=bases_surf)
-    objective.add_subsystem('Surface_Sampling',comp,promotes=['*'])
-    objective.add_subsystem('Fnorms',Fnorm(num_pts=num_hess_pts,dim=dim),promotes=['*'])
-    comp = soft_objective(num_samp=num_hess_pts,num_surf=num_surf_pts,dim=dim,normals=normals)
-    objective.add_subsystem('Penals',comp,promotes=['*'])
-#################################
-if not soft_const:
-    constraint = ot.Group()
-    comp = surf_sampling(num_cps=num_cps_pts,num_pts=num_surf_pts,dim=dim,
-                        scaling=scaling,bases=bases_surf)
-    constraint.add_subsystem('Surface_Sampling',comp,promotes=['*'])
+comp = surf_sampling(num_cps=num_cps_pts,num_pts=num_surf_pts,dim=dim,
+                    scaling=scaling,bases=bases_surf)
+objective.add_subsystem('Surface_Sampling',comp,promotes=['*'])
+objective.add_subsystem('Fnorms',Fnorm(num_pts=num_hess_pts,dim=dim),promotes=['*'])
+comp = soft_objective(num_samp=num_hess_pts,num_surf=num_surf_pts,dim=dim,normals=normals)
+objective.add_subsystem('Penals',comp,promotes=['*'])
 #################################
 Prob = om.Problem()
 # Prob = Problem()
 model = Prob.model
 model.add_subsystem('Inputs_Group', inputs, promotes=['*'])
 model.add_subsystem('Objective_Group', objective, promotes=['*'])
-if not soft_const:
-    model.add_subsystem('Constraints_Group', constraint, promotes=['*'])
-
 model.add_design_var('phi_cps',lower=-1,upper=1)
-if soft_const:
-    model.add_objective('soft_objective',scaler=1)
-else:
-    model.add_objective('Curvature_Metric',scaler=1)
-    model.add_constraint('phi_surf',equals=np.zeros(num_surf_pts),linear=True)
-    model.add_constraint('dpdx_surf',equals=-normals[:,0],linear=True)
-    model.add_constraint('dpdy_surf',equals=-normals[:,1],linear=True)
-    model.add_constraint('dpdz_surf',equals=-normals[:,2],linear=True)
+model.add_objective('soft_objective',scaler=1)
 #################################
 Prob.driver = om.pyOptSparseDriver()
 Prob.driver.options['optimizer'] = 'SNOPT'
@@ -230,11 +209,7 @@ t2 = time.time()
 #################################
 print('Runtime: ',t2-t1)
 Func.runtime = t2-t1
-if soft_const:
-    print('Final Objective Value: ',Prob['soft_objective'])
-else:
-    print('Final Objective Value: ',Prob['Curvature_Metric'])
-    print('Constraint check: \nmax_phi_surf: ',np.max(abs(Prob['phi_surf'])))
+print('Final Objective Value: ',Prob['soft_objective'])
 Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 print('Energies: ',Func.E)
