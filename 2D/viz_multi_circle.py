@@ -1,4 +1,4 @@
-from modules.Hicken_Method import Hicken_eval, Hicken_deriv_eval
+from utils.Hicken_Method import Hicken_eval, Hicken_deriv_eval
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -17,12 +17,7 @@ def set_fonts():
     plt.rc('axes', labelsize=18)    # fontsize of the x and y labels
 set_fonts()
 
-Func = pickle.load( open( "SAVED_DATA/_Saved_Multio4.pkl", "rb" ) )
-gold = (198/255, 146/255, 20/255)
-blue = (24/255, 43/255, 73/255)
-
-x = Func.dimensions[0]
-y = Func.dimensions[1]
+Func = pickle.load( open( "SAVED_DATA/_Saved_Circles.pkl", "rb" ) )
 
 x = [-18.,18.]
 y = [-9,6]
@@ -131,7 +126,7 @@ plt.tight_layout()
 
 set_fonts()
 
-plt.savefig('PDF_figures/multi_circles.pdf',bbox_inches='tight') 
+# plt.savefig('PDF_figures/multi_circles.pdf',bbox_inches='tight') 
 
 pickle.dump(fig4_data, open("fig4_data.pkl","wb"))
 

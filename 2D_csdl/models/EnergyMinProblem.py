@@ -11,7 +11,6 @@ class EnergyMinProblem(csdl.Model):
         self.parameters.declare('N',       types=int)
         self.parameters.declare('dim',     types=int)
         self.parameters.declare('scaling', types=np.ndarray)
-        self.parameters.declare('dV',      types=float)
         self.parameters.declare('Lp',      types=float)
         self.parameters.declare('Ln',      types=float)
         self.parameters.declare('Lr',      types=float)
@@ -19,21 +18,24 @@ class EnergyMinProblem(csdl.Model):
         self.parameters.declare('scalar_basis',  types=sps.spmatrix)
         self.parameters.declare('gradient_bases',types=list)
         self.parameters.declare('hessian_bases', types=list)
+        self.parameters.declare('bbox_diag',    types=float)
+        self.parameters.declare('verbose',      types=bool)
 
     def define(self):
         # Parameters
         gradient_bases = self.parameters['gradient_bases']
         hessian_bases = self.parameters['hessian_bases']
         scalar_basis = self.parameters['scalar_basis']
+        bbox_diag = self.parameters['bbox_diag']
         scaling = self.parameters['scaling']
         num_cps = self.parameters['num_cps']
         N_gamma = self.parameters['N_gamma']
         normals = self.parameters['normals']
+        verbose = self.parameters['verbose']
         dim = self.parameters['dim'] 
         Lp = self.parameters['Lp']
         Ln = self.parameters['Ln']
         Lr = self.parameters['Lr']
-        dV = self.parameters['dV']
         N = self.parameters['N']
         # Design Variables
         phi_cps = self.declare_variable('phi_cps',shape=(num_cps,))
@@ -45,10 +47,10 @@ class EnergyMinProblem(csdl.Model):
         basis_110 = hessian_bases[1]
         basis_020 = hessian_bases[2]
         if dim == 3:
-            basis_001 = gradient_bases[3]
-            basis_101 = hessian_bases[4]
-            basis_011 = hessian_bases[5]
-            basis_002 = hessian_bases[6]  
+            basis_001 = gradient_bases[2]
+            basis_101 = hessian_bases[3]
+            basis_011 = hessian_bases[4]
+            basis_002 = hessian_bases[5]  
         # Sampling the Bsplines
         phi_surf = csdl.matvec(basis_000,phi_cps)
         dx = scaling[0]*csdl.matvec(basis_100,phi_cps)
@@ -62,10 +64,10 @@ class EnergyMinProblem(csdl.Model):
             dyz = scaling[1]*scaling[2]*csdl.matvec(basis_011,phi_cps)
             dzz = scaling[2]*scaling[2]*csdl.matvec(basis_002,phi_cps)
         # CSDL reshaping at its finest
-        nx = normals[:,0]
-        ny = normals[:,1]
+        nx = normals[:,0]/bbox_diag
+        ny = normals[:,1]/bbox_diag
         if dim == 3:
-            nz = normals[:,2]
+            nz = normals[:,2]/bbox_diag
         # Assembling energy terms
         Ep = 1/N_gamma * csdl.sum(phi_surf**2)
         if dim == 2:
@@ -75,12 +77,17 @@ class EnergyMinProblem(csdl.Model):
             En = 1/N_gamma * csdl.sum( ((dx+nx)**2 + (dy+ny)**2 + (dz+nz)**2) )
             Er = 1/N * csdl.sum( dxx**2 + 2*dxy**2 + dyy**2 + 2*dxz**2 + 2*dyz**2 + dzz**2)
         # Optional Printing
-        self.print_var(Ep)
-        self.print_var(En)
-        self.print_var(Er)
+        self.register_output("Ep",Ep)
+        self.register_output("En",En)
+        self.register_output("Er",Er)
+        if verbose:
+            self.print_var(Ep)
+            self.print_var(En)
+            self.print_var(Er)
         # Objective function
         f = Lp*Ep + Ln*En + Lr*Er
         self.register_output("objective",f)
+
 if __name__ == '__main__':
     from python_csdl_backend import Simulator
     import numpy as np
@@ -93,6 +100,7 @@ if __name__ == '__main__':
 
     scaling = np.random.rand(dim)
     dV = 0.83493758
+    bbox_diag = 11.24124
     Lp = 1e4
     Ln = 1e2
     Lr = 1e-2
@@ -116,11 +124,12 @@ if __name__ == '__main__':
         Lp=Lp,
         Ln=Ln,
         Lr=Lr,
-        dV=dV,
         scalar_basis=scalar_basis,
         gradient_bases=gradient_bases,
         hessian_bases=hessian_bases,
-        normals=normals
+        normals=normals,
+        bbox_diag=bbox_diag,
+        verbose=False,
     ))
     sim['phi_cps'] = np.random.rand(num_cps)
     sim.run()

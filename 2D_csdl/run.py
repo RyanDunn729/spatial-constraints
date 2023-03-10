@@ -3,7 +3,7 @@ from geom_shapes.multi_circle import multi_circle
 from geom_shapes.multi_obj import multi_obj
 from geom_shapes.rectangle import rectangle
 from geom_shapes.ellipse import ellipse
-from Bsplines.base import MyProblem
+from models.base import MyProblem
 import csdl
 from python_csdl_backend import Simulator
 from modopt.csdl_library import CSDLProblem
@@ -20,54 +20,47 @@ print('Imported Packages \n')
 
 ######### Configurables #########
 order = 4
-max_cps = 40
+max_cps = 72
 
 Lp = 1e3
 Ln = 10.
-Lr = 1e-1
+Lr = 1e1
 
 tol = 1e-4
 
-visualize_init = False
-######### Get Contour #########
-# 72 is even
-# 76 is slightly off
-num_surf_pts = 76
-a = 5
-b = 7
-# centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
-# radii = [2.,2.,4.,3.]
+prev_filename = None
+# prev_filename = "SAVED_DATA/Opt_rectangle_L2_1.pkl"
+# prev_filename = "_Saved_Function.pkl"
 
-### Choose shape ###
-# e = ellipse(a,b)
-e = rectangle(a,b)
-# e = multi_circle(centers,radii)
-###############################
-pts = e.points(num_surf_pts)
-normals = e.unit_pt_normals(num_surf_pts)
+######### Sample Surface #########
+num_surf_pts = 76
+
+# a = 5
+# b = 7
+# e = rectangle(a,b)
+# custom_dimensions = np.array([
+#     [-4.,4.],
+#     [-5.6,5.6]])
+
+centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
+radii = [2.,2.,4.,3.]
+e = multi_circle(centers,radii)
+custom_dimensions = np.array([
+    [-18.,18.],
+    [-9,6]])
 
 num_exact = 10000
+pts = e.points(num_surf_pts)
+normals = e.unit_pt_normals(num_surf_pts)
 ex_pts = e.points(num_exact)
 ex_norms = e.unit_pt_normals(num_exact)
 exact = np.stack((ex_pts,ex_norms))
 
-exact = pickle.load(open("boundary_data.pkl","rb"))
-pts, normals = exact
-x = np.asarray([262403., 262553., 262703., 262853., 263003., 263153., 263303.,
-                263453., 263603., 263753., 263903., 264053., 264203., 264353.,
-                264503., 264653., 264803., 264953., 265103., 265253.])
-y = np.asarray([6504239., 6504389., 6504539., 6504689., 6504839., 6504989.,
-                6505139., 6505289., 6505439., 6505589., 6505739., 6505889.,
-                6506039., 6506189., 6506339., 6506489., 6506639., 6506789.,
-                6506939., 6507089.])
-x_min_d = x.min()
-y_min_d = y.min()
-x -= x_min_d
-y -= y_min_d
-x /= np.max(x)/10
-y /= np.max(y)/10
-custom_dimensions = np.array([[x.min(), x.max()],
-                              [y.min(), y.max()],])
+### WFLOP offshore example
+# exact = pickle.load(open("geom_shapes/WFLOP_boundary_data.pkl","rb"))
+# pts, normals = exact
+# custom_dimensions = np.array([[0.,12.],
+#                               [0.,12.],])
 
 dxy = np.diff(custom_dimensions).flatten()
 frac = dxy / np.max(dxy)
@@ -116,7 +109,9 @@ model.add(EnergyMinProblem(
     scalar_basis=scalar_basis,
     gradient_bases=gradient_bases,
     hessian_bases=hessian_bases,
-    normals=normals/Func.Bbox_diag,
+    normals=normals,
+    bbox_diag=Func.Bbox_diag,
+    verbose=True,
 ))
 model.add_design_variable("phi_cps", lower=-1, upper=1)
 model.add_objective("objective", scaler=1)
@@ -156,4 +151,7 @@ print('Surface error (rel): \n',
 print('Surface error (units): \n',
         'Max: ',Func.Bbox_diag*np.max(phi),'\n',
         'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
+print("Ep: ",sim["Ep"])
+print("En: ",sim["En"])
+print("Er: ",sim["Er"])
 print('END')

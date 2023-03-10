@@ -10,7 +10,7 @@ from scipy.spatial import KDTree
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
-from modules.Hicken_Method import KS_eval
+from utils.Hicken_Method import Hicken_eval
 
 fig3_data = {}
 
@@ -25,6 +25,11 @@ def set_fonts():
     plt.rc('axes', labelsize=axisfontsize)    # fontsize of the x and y labels
 set_fonts()
 
+exact_box = np.array([[-2.5,-3.5],
+                 [-2.5,3.5],
+                 [2.5,3.5],
+                 [2.5,-3.5],
+                 [-2.5,-3.5],])
 box2 = np.array([[-1.5,-2.5],
                  [-1.5,2.5],
                  [1.5,2.5],
@@ -39,11 +44,7 @@ box3 = np.array([[-0.5,-1.5],
 legend_anchor = (1.1, 1.05)
 contour_alpha = 0.30
 
-# Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 Func = pickle.load( open( "SAVED_DATA/_Saved_Rectangle.pkl", "rb" ) )
-print(np.shape(Func.cps))
-print(Func.cps[1507])
-Func.cps[1507,2] += 1
 
 gold = (198/255, 146/255, 20/255)
 blue = (24/255, 43/255, 73/255)
@@ -66,7 +67,7 @@ fig3_data["xx"] = xx
 fig3_data["yy"] = yy
 fig3_data["phi_energy_minimized"] = phi
 fig3_data["pt_cloud"] = Func.surf_pts
-ax.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
+ax.plot(exact_box[:,0],exact_box[:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
 rect = patches.FancyBboxPatch((-3.5,-4.5), 7,9, boxstyle='round,pad=0,rounding_size=1', 
     linewidth=1.5, alpha=contour_alpha,edgecolor='k',facecolor='none')
 ax.add_patch(rect)
@@ -87,7 +88,7 @@ ax.set_ylim(Func.dimensions[1,0], Func.dimensions[1,1])
 sns.despine()
 
 axins = zoomed_inset_axes(ax, 5, loc=5)
-axins.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',linewidth=0.75)
+axins.plot(exact_box[:,0],exact_box[:,1],'k-',linewidth=0.75)
 axins.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',markersize=10)
 axins.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
     colors=['tab:orange','tab:green','tab:blue','tab:purple'])
@@ -102,17 +103,17 @@ ax.legend(framealpha=1,edgecolor='black',facecolor='white',
             bbox_to_anchor=legend_anchor, loc='upper right')
 
 set_fonts()
-plt.savefig('PDF_figures/Rectangle_Bspline.pdf',bbox_inches='tight')
+# plt.savefig('PDF_figures/Rectangle_Bspline.pdf',bbox_inches='tight')
 
 sns.set_style('ticks')
 fig2 = plt.figure(figsize=(7,5),dpi=140)
 ax = plt.axes()
 dataset = KDTree(Func.surf_pts)
 samples = np.transpose(np.vstack((xx.flatten(),yy.flatten())))
-phi_init = KS_eval(samples,dataset,Func.normals,k=6,rho=20)
+phi_init = Hicken_eval(samples,dataset,Func.normals,k=6,rho=20)
 phi_init = phi_init.reshape(res,res)
 fig3_data["phi_init"] = phi_init
-ax.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
+ax.plot(exact_box[:,0],exact_box[:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
 rect = patches.FancyBboxPatch((-3.5,-4.5), 7,9, boxstyle='round,pad=0,rounding_size=1', 
     linewidth=1.5, alpha=contour_alpha,edgecolor='k',facecolor='none')
 ax.add_patch(rect)
@@ -133,7 +134,7 @@ ax.set_ylim(Func.dimensions[1,0], Func.dimensions[1,1])
 sns.despine()
 
 axins = zoomed_inset_axes(ax, 5, loc=5)
-axins.plot(Func.exact[0][:,0],Func.exact[0][:,1],'k-',linewidth=1)
+axins.plot(exact_box[:,0],exact_box[:,1],'k-',linewidth=1)
 axins.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],'k.',markersize=10)
 axins.contour(xx,yy,phi_init,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
     colors=['tab:orange','tab:green','tab:blue','tab:purple'])
@@ -149,6 +150,6 @@ ax.legend(framealpha=1,edgecolor='black',facecolor='white',
 
 set_fonts()
 
-pickle.dump(fig3_data, open("fig3_data.pkl","wb"))
-plt.savefig('PDF_figures/Rectangle_Hicken.pdf',bbox_inches='tight')
+# pickle.dump(fig3_data, open("fig3_data.pkl","wb"))
+# plt.savefig('PDF_figures/Rectangle_Hicken.pdf',bbox_inches='tight')
 plt.show()

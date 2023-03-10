@@ -1,16 +1,15 @@
-from modules.soft_objective import soft_objective
-from modules.surf_samp import surf_sampling
-from modules.curv_samp import curv_sampling
-from modules.assm_hess import assm_hess
+from models.objective import Objective
+from models.surf_samp import surf_sampling
+from models.curv_samp import curv_sampling
+from models.fnorm import Fnorm
 from geom_shapes.multi_circle import multi_circle
 from geom_shapes.multi_obj import multi_obj
 from geom_shapes.rectangle import rectangle
 from geom_shapes.ellipse import ellipse
-from modules.base import MyProblem
-from lsdo_viz.api import Problem
+from models.base import MyProblem
+# from lsdo_viz.api import Problem
 import matplotlib.pyplot as plt
 import openmdao.api as om
-import omtools.api as ot
 import numpy as np
 import pickle
 import time
@@ -19,66 +18,62 @@ print('Imported Packages \n')
 ######### Configurables #########
 dim = 2
 order = 4
-R = 1
-max_cps = 40
-border = 0.3
+max_cps = 72
 
-L1 = 1e-3
-L2 = 10.
-L3 = 1e3
+Lp = 1e3
+Ln = 10.
+Lr = 1e1
 
 tol = 1e-4
+
+visualize_init = False
 
 prev_filename = None
 # prev_filename = "SAVED_DATA/Opt_rectangle_L2_1.pkl"
 # prev_filename = "_Saved_Function.pkl"
 
-visualize_init = False
-######### Get Contour #########
-# 72 is even
-# 76 is slightly off
+######### Sample Surface #########
 num_surf_pts = 76
-a = 5
-b = 7
-# centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
-# radii = [2.,2.,4.,3.]
 
-### Choose shape ###
-# e = ellipse(a,b)
-e = rectangle(a,b)
-# e = multi_circle(centers,radii)
-###############################
-pts = e.points(num_surf_pts)
-normals = e.unit_pt_normals(num_surf_pts)
+# a = 5
+# b = 7
+# e = rectangle(a,b)
+# custom_dimensions = np.array([
+#     [-4.,4.],
+#     [-5.6,5.6]])
+
+centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
+radii = [2.,2.,4.,3.]
+e = multi_circle(centers,radii)
+custom_dimensions = np.array([
+    [-18.,18.],
+    [-9,6]])
 
 num_exact = 10000
+pts = e.points(num_surf_pts)
+normals = e.unit_pt_normals(num_surf_pts)
 ex_pts = e.points(num_exact)
 ex_norms = e.unit_pt_normals(num_exact)
 exact = np.stack((ex_pts,ex_norms))
 
-exact = pickle.load(open("boundary_data.pkl","rb"))
-pts, normals = exact
-x = np.asarray([262403., 262553., 262703., 262853., 263003., 263153., 263303.,
-                263453., 263603., 263753., 263903., 264053., 264203., 264353.,
-                264503., 264653., 264803., 264953., 265103., 265253.])
-y = np.asarray([6504239., 6504389., 6504539., 6504689., 6504839., 6504989.,
-                6505139., 6505289., 6505439., 6505589., 6505739., 6505889.,
-                6506039., 6506189., 6506339., 6506489., 6506639., 6506789.,
-                6506939., 6507089.])
-x_min_d = x.min()
-y_min_d = y.min()
-x -= x_min_d
-y -= y_min_d
-x /= np.max(x)/10
-y /= np.max(y)/10
-custom_dimensions = np.array([[x.min(), x.max()],
-                              [y.min(), y.max()],])
+### WFLOP offshore example
+# exact = pickle.load(open("geom_shapes/WFLOP_boundary_data.pkl","rb"))
+# pts, normals = exact
+# custom_dimensions = np.array([[0.,12.],
+#                               [0.,12.],])
+
+dxy = np.diff(custom_dimensions).flatten()
+frac = dxy / np.max(dxy)
+num_cps = np.zeros(2,dtype=int)
+for i,ratio in enumerate(frac):
+    if ratio < 0.75:
+        ratio = 0.75
+    num_cps[i] = int(np.round(frac[i]*max_cps)+order-1)
 
 ######### Initialize Volume #########
-Func = MyProblem(exact, pts, normals, max_cps, R, border, order, custom_dimensions=custom_dimensions)
-scaling, dA, A, bases_surf, bases_curv = Func.get_values()
-Func.a = a
-Func.b = b
+Func = MyProblem(pts, normals, num_cps, order, custom_dimensions, exact=exact)
+scaling, bases_surf, bases_curv = Func.get_values()
+
 if visualize_init:
     Func.visualize_current()
     plt.show()
@@ -92,56 +87,49 @@ print('Num_hess_pts: ', num_hess_pts)
 print('Num_ctrl_pts: ', num_cps_pts)
 print('Num_surf_pts: ', num_surf_pts,'\n')
 #################################
-class Curvature_Objective(ot.Group):
-    def setup(self):
-        H = self.declare_input('hessians',shape=(num_hess_pts,dim,dim))
-        dA = self.declare_input('dA',shape=(1,))
-        A = self.declare_input('A',shape=(1,))
-        Fnorm = ot.pnorm(H,axis=(1,2))
-        self.register_output('Curvature_Metric',ot.sum(Fnorm**2)*dA/A)
-class Fnorm(ot.Group):
-    def setup(self):
-        H = self.declare_input('hessians',shape=(num_hess_pts,dim,dim))
-        self.register_output('Fnorm',ot.pnorm(H,axis=(1,2),pnorm_type=2))
+EnergyMinModel = om.Group()
+EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
+        num_cps=num_cps_pts,
+        num_pts=num_hess_pts,
+        dim=dim,
+        scaling=scaling,
+        bases=bases_curv
+    ),promotes=['*'])
+EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
+        num_cps=num_cps_pts,
+        num_pts=num_surf_pts,
+        dim=dim,
+        scaling=scaling,
+        bases=bases_surf,
+    ),promotes=['*'])
+EnergyMinModel.add_subsystem('Fnorms',Fnorm(
+        num_pts=num_hess_pts,
+        dim=dim,
+    ),promotes=['*'])
+EnergyMinModel.add_subsystem('Objective',Objective(
+        num_samp=num_hess_pts,
+        num_surf=num_surf_pts,
+        dim=dim,
+        Lp=Lp,
+        Ln=Ln,
+        Lr=Lr,
+        normals=normals,
+        bbox_diag=Func.Bbox_diag,
+        verbose=True,
+    ),promotes=['*'])
 #################################
-inputs = ot.Group()
-inputs.create_indep_var('phi_cps', shape=(num_cps_pts,))
-inputs.create_indep_var('dA',val=dA)
-inputs.create_indep_var('A',val=A)
-inputs.create_indep_var('lambdas',val=np.array([L1,L2,L3]))
-#################################
-objective = ot.Group()
-objective.add_subsystem('Curvature_Sampling', curv_sampling(num_cps=num_cps_pts,
-                        num_pts=num_hess_pts,dim=dim,scaling=scaling,bases=bases_curv),
-                        promotes=['*'])
-objective.add_subsystem('Assemble_Hessians',assm_hess(num_pts=num_hess_pts,dim=dim),
-                        promotes=['*'])
-comp = surf_sampling(num_cps=num_cps_pts,num_pts=num_surf_pts,dim=dim,
-                    scaling=scaling,bases=bases_surf)
-objective.add_subsystem('Surface_Sampling',comp,promotes=['*'])
-objective.add_subsystem('Fnorms',Fnorm(),promotes=['*'])
-comp = soft_objective(num_samp=num_hess_pts,
-                        num_surf=num_surf_pts,dim=dim,normals=normals)
-objective.add_subsystem('Penals',comp,promotes=['*'])
-#################################
-Prob = Problem()
-model = Prob.model
-model.add_subsystem('Inputs_Group', inputs, promotes=['*'])
-model.add_subsystem('Objective_Group', objective, promotes=['*'])
-
-Prob.model.add_design_var('phi_cps',lower=-2,upper=2)
-Prob.model.add_objective('soft_objective',scaler=1)
+# Prob = Problem()
+Prob = om.Problem(EnergyMinModel)
+Prob.model.add_design_var('phi_cps',lower=-1,upper=1)
+Prob.model.add_objective('objective',scaler=1)
 #################################
 Prob.driver = om.pyOptSparseDriver()
 Prob.driver.options['optimizer'] = 'SNOPT'
 Prob.driver.opt_settings['Major iterations limit'] = 10000
 Prob.driver.opt_settings['Minor iterations limit'] = 10000
 Prob.driver.opt_settings['Iterations limit'] = 150000
-Prob.driver.opt_settings['Major feasibility tolerance'] = 1e-12
 Prob.driver.opt_settings['Major optimality tolerance'] = tol
-Prob.driver.opt_settings['Minor feasibility tolerance'] = 1e-12
-#################################
-Prob.setup(force_alloc_complex=True)
+Prob.setup()
 #################################
 if prev_filename:
     previous_data = pickle.load(open(prev_filename,"rb"))
@@ -155,9 +143,8 @@ Prob.run_driver()
 t2 = time.time()
 #################################
 print('Runtime: ',t2-t1)
-print('Final Objective Value: ',Prob['soft_objective'])
+print('Final Objective Value: ',Prob['objective'])
 Func.runtime = t2-t1
-Func.E, Func.E_scaled = Func.get_energy_terms(Prob)
 Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()

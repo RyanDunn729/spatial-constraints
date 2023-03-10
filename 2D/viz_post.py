@@ -116,18 +116,12 @@ bbox_max = 5
 # ax.set_ylabel('RMS error')
 # plt.legend(loc='lower left')
 
-Energy1 = Func.E_scaled[2] # Measurement of the curvature energy
-Energy2 = Func.E_scaled[0] # Surf energy
-Energy3 = Func.E_scaled[1] # local energy
 # ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
 # RMS_local = np.mean(data)
 phi = Func.eval_surface()
 MAX_surf = np.max(abs(phi))/Func.Bbox_diag
 RMS_surf = np.sqrt(np.sum(phi**2)/len(phi))/Func.Bbox_diag
 
-print('E1:',Energy1)
-print('E2:',Energy2)
-print('E3:',Energy3)
 # print('RMS Local 1%:',RMS_local)
 print('MAX surf:',MAX_surf)
 print('RMS surf:',RMS_surf)
