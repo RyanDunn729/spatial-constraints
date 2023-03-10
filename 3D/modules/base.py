@@ -10,37 +10,39 @@ import time
 
 class MyProblem(object):
 
-    def __init__(self, exact, surf_pts, normals, max_cps, R, border, order):
-        k = 10 # Num of nearest points to garuntee interior or exterior point
+    def __init__(self, surf_pts, normals, max_cps, border, order, exact=None):
         self.order = order # Must be >2
         self.u = {}
         self.v = {}
         self.w = {}
-        self.exact = exact
+        if exact is not None:
+            self.exact = exact
+        else:
+            self.exact = (surf_pts,normals)
         self.surf_pts = surf_pts
         self.normals = normals
 
-        # Bounding Box of Exact Mesh
-        lower = np.min(exact[0],axis=0)
-        upper = np.max(exact[0],axis=0)
+        # Minimum Bounding Box Diagonal
+        lower = np.min(surf_pts,axis=0)
+        upper = np.max(surf_pts,axis=0)
         diff = upper-lower
         self.Bbox_diag = np.linalg.norm(diff)
         self.dimensions = np.stack((lower-diff*border, upper+diff*border),axis=1)
-        self.V = np.product(np.diff(self.dimensions))
-        dxyz = np.diff(self.dimensions).flatten()/self.Bbox_diag
+        self.total_volume = np.product(np.diff(self.dimensions))
+        dxyz = np.diff(self.dimensions).flatten()
+        self.scaling = 1/dxyz
 
         # Scale the resolutions of cps and hess samples
         frac = dxyz / np.max(dxyz)
         num_cps = np.zeros(3,dtype=int)
-        num_hess = np.zeros(3,dtype=int)
-        for i in range(3):
-            if frac[i] < 0.6:
-                frac[i] = 0.6
+        for i,ratio in enumerate(frac):
+            if ratio < 0.75:
+                ratio = 0.75
             num_cps[i] = int(np.round(frac[i]*max_cps)+order-1)
-            num_hess[i] = int(np.round(R*(num_cps[i]-order+R-1)-1))
         self.num_cps = num_cps
+
         # Get initial control points
-        self.cps = self.init_cps_Hicken(k=k,rho=10*len(exact[0]))
+        self.cps = self.init_cps_Hicken(k=10,rho=10)
 
         # Standard uniform knot vectors
         kv_u = self.std_uniform_knot_vec(num_cps[0], order)
@@ -52,21 +54,21 @@ class MyProblem(object):
         # Get uvw_mesh
         self.u['surf'], self.v['surf'], self.w['surf'] = self.spatial_to_parametric(surf_pts)
         # Get uvw_hess
-        self.v['hess'], self.u['hess'], self.w['hess'] = np.meshgrid(
-            np.linspace(0,1, num_hess[1]+2)[1:num_hess[1]+1],
-            np.linspace(0,1, num_hess[0]+2)[1:num_hess[0]+1],
-            np.linspace(0,1, num_hess[2]+2)[1:num_hess[2]+1])
-        self.u['hess'] = self.u['hess'].flatten()
-        self.v['hess'] = self.v['hess'].flatten()
-        self.w['hess'] = self.w['hess'].flatten()
+        temp_u, temp_v, temp_w = self.spatial_to_parametric(self.cps[:,0:3])
+        mask = np.argwhere(
+            (temp_u>=0)*(temp_u<=1)*\
+            (temp_v>=0)*(temp_v<=1)*\
+            (temp_w>=0)*(temp_w<=1)
+        )
+        self.u['hess'], self.v['hess'], self.w['hess'] = temp_u[mask].flatten(), temp_v[mask].flatten(), temp_w[mask].flatten()
 
         # Sizing
-        self.dV = self.V/np.product(num_hess)
-        # Get scaling matrix
-        self.scaling = 1/dxyz
+        num_hess = len(self.u['hess'])
+        self.dV = self.total_volume/(num_hess)
 
-        self.num_cps_pts = int(np.product(num_cps))
-        self.num_hess_pts = int(np.product(num_hess))
+        self.num_surf_pts = int(len(surf_pts))
+        self.num_cps_pts  = int(np.product(num_cps))
+        self.num_hess_pts = int(num_hess)
 
         print('BBox with border: \n',self.dimensions,'\n')
         print('BBox diagonal: ',self.Bbox_diag,'\n')
@@ -79,7 +81,7 @@ class MyProblem(object):
 
     def get_values(self):
         surf, curv = self.get_bases()
-        return self.scaling, self.dV, self.V, surf, curv
+        return self.scaling, surf, curv
 
     def set_cps(self, cps_phi):
         self.cps[:,3] = cps_phi
@@ -111,10 +113,9 @@ class MyProblem(object):
         hess_101  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],1,0,1)
         hess_002  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,0,2)
         bases_curv = np.stack((hess_200,hess_110,hess_020,hess_101,hess_011,hess_002))
-        del self.u, self.v, self.w
         return bases_surf, bases_curv
 
-    def init_cps_Hicken(self,k=10,rho=1000):
+    def init_cps_Hicken(self,k=10,rho=10):
         rangex = self.dimensions[0]
         rangey = self.dimensions[1]
         rangez = self.dimensions[2]
@@ -147,9 +148,14 @@ class MyProblem(object):
         exp = np.exp(-rho*d_norm)
         Dx = dataset.data[indices] - np.reshape(cps[:,0:3],(np.product(self.num_cps),1,3))
         phi = np.einsum('ijk,ijk,ij,i->i',Dx,self.exact[1][indices],exp,1/np.sum(exp,axis=1))
-        phi += 1e-14*(2*np.random.rand(np.product(self.num_cps))-1)
+        np.random.seed(1)
+        phi += 1e-3*self.Bbox_diag*(2*np.random.rand(np.product(self.num_cps))-1)
         cps[:, 3] = phi/self.Bbox_diag
         return cps
+
+    def get_basis(self,loc='surf',du=0,dv=0,dw=0):
+        basis = self.Volume.get_basis_matrix(self.u[loc],self.v[loc],self.w[loc],du,dv,dw)
+        return basis
 
     def eval_pts(self,pts):
         u,v,w = self.spatial_to_parametric(pts)
@@ -183,7 +189,7 @@ class MyProblem(object):
         return np.linspace(-bbox_perc,bbox_perc,res), RMS_local/self.Bbox_diag
 
     def check_local_max_error(self,bbox_perc,res,num_samp=None):
-        from modules.Hicken import KS_eval
+        from utils.Hicken_Kaur import KS_eval
         if num_samp is None:
             num_samp = len(self.surf_pts)
         ep_max = bbox_perc*self.Bbox_diag / 100
@@ -205,7 +211,7 @@ class MyProblem(object):
         return np.linspace(-bbox_perc,bbox_perc,res), MAX_local/self.Bbox_diag
 
     def check_local_RMS_error_via_hicken(self,bbox_perc,res,num_samp=None):
-        from modules.Hicken import KS_eval
+        from utils.Hicken_Kaur import KS_eval
         if num_samp is None:
             num_samp = len(self.surf_pts)
         ep_max = bbox_perc*self.Bbox_diag / 100
@@ -227,7 +233,7 @@ class MyProblem(object):
         return np.linspace(-bbox_perc,bbox_perc,res), RMS_local/self.Bbox_diag
 
     def check_local_max_error_via_hicken(self,bbox_perc,res,num_samp=None):
-        from modules.Hicken import KS_eval
+        from utils.Hicken_Kaur import KS_eval
         if num_samp is None:
             num_samp = len(self.surf_pts)
         ep_max = bbox_perc*self.Bbox_diag / 100
@@ -248,25 +254,8 @@ class MyProblem(object):
             MAX_local[i] = np.max(abs(abs(phi)-phi_ex))
         return np.linspace(-bbox_perc,bbox_perc,res), MAX_local/self.Bbox_diag
 
-    def get_energy_terms(self,Prob):
-        L = Prob['lambdas']
-        E = np.zeros(3)
-        num_surf = len(self.surf_pts)
-        E[2] = L[2]*np.sum(Prob['phi_surf']**2)/num_surf
-        E[1] = L[1]*np.sum((Prob['dpdx_surf']+self.normals[:,0])**2)/num_surf
-        E[1] += L[1]*np.sum((Prob['dpdy_surf']+self.normals[:,1])**2)/num_surf
-        E[1] += L[1]*np.sum((Prob['dpdz_surf']+self.normals[:,2])**2)/num_surf
-        E[0] = L[0]*self.dV/self.V*np.sum(Prob['Fnorm']**2)/self.num_hess_pts
-
-        E_scaled = np.zeros(3)
-        E_scaled[0] = E[0]/L[0]
-        E_scaled[1] = E[1]/L[1]
-        E_scaled[2] = E[2]/L[2]
-        return E, E_scaled
-
-    def visualize_current(self,res):
+    def visualize_current(self,res=30):
         gold = (198/255, 146/255, 20/255)
-
         sns.set()
         plt.figure()
         ax = plt.axes(projection='3d')
@@ -320,69 +309,3 @@ class MyProblem(object):
         ax.set_title('Phi along 1D slices')
         ax.legend()
         return
-
-    def get_RMS_Fnorm(self):
-        init_cps = self.init_cps_Hicken()
-        num_hess = np.zeros(3,dtype=int)
-        R = 2
-        for i in range(3):
-            num_hess[i] = int(np.round(R*(self.num_cps[i]-self.order+R-1)-1))
-        # Get uvw_hess
-        self.u = {}
-        self.v = {}
-        self.w = {}
-        self.v['hess'], self.u['hess'], self.w['hess'] = np.meshgrid(
-            np.linspace(0,1, num_hess[1]+2)[1:num_hess[1]+1],
-            np.linspace(0,1, num_hess[0]+2)[1:num_hess[0]+1],
-            np.linspace(0,1, num_hess[2]+2)[1:num_hess[2]+1])
-        self.u['hess'] = self.u['hess'].flatten()
-        self.v['hess'] = self.v['hess'].flatten()
-        self.w['hess'] = self.w['hess'].flatten()
-        hess_200  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],2,0,0)
-        hess_020  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,2,0)
-        hess_110  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],1,1,0)
-        hess_011  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,1,1)
-        hess_101  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],1,0,1)
-        hess_002  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,0,2)
-        bases_curv = np.stack((hess_200,hess_110,hess_020,hess_101,hess_011,hess_002))
-
-        scaling = self.scaling
-        bases = bases_curv
-
-        init_cps[:,3] *= self.Bbox_diag
-        dp_dxx = scaling[0]*scaling[0]*bases[0].dot(init_cps[:,3])
-        dp_dxy = scaling[0]*scaling[1]*bases[1].dot(init_cps[:,3])
-        dp_dyy = scaling[1]*scaling[1]*bases[2].dot(init_cps[:,3])
-        dp_dxz = scaling[0]*scaling[2]*bases[3].dot(init_cps[:,3])
-        dp_dyz = scaling[1]*scaling[2]*bases[4].dot(init_cps[:,3])
-        dp_dzz = scaling[2]*scaling[2]*bases[5].dot(init_cps[:,3])
-        hess = np.zeros((int(np.product(num_hess)),3,3))
-        hess[:,0,0] = dp_dxx
-        hess[:,1,0] = dp_dxy
-        hess[:,0,1] = dp_dxy
-        hess[:,1,1] = dp_dyy
-        hess[:,0,2] = dp_dxz
-        hess[:,2,0] = dp_dxz
-        hess[:,1,2] = dp_dyz
-        hess[:,2,1] = dp_dyz
-        hess[:,2,2] = dp_dzz
-        initial = np.sqrt(np.mean(  np.linalg.norm(hess,axis=(1,2),ord='fro')**2 ))
-
-        dp_dxx = scaling[0]*scaling[0]*bases[0].dot(self.cps[:,3])
-        dp_dxy = scaling[0]*scaling[1]*bases[1].dot(self.cps[:,3])
-        dp_dyy = scaling[1]*scaling[1]*bases[2].dot(self.cps[:,3])
-        dp_dxz = scaling[0]*scaling[2]*bases[3].dot(self.cps[:,3])
-        dp_dyz = scaling[1]*scaling[2]*bases[4].dot(self.cps[:,3])
-        dp_dzz = scaling[2]*scaling[2]*bases[5].dot(self.cps[:,3])
-        hess = np.zeros((int(np.product(num_hess)),3,3))
-        hess[:,0,0] = dp_dxx
-        hess[:,1,0] = dp_dxy
-        hess[:,0,1] = dp_dxy
-        hess[:,1,1] = dp_dyy
-        hess[:,0,2] = dp_dxz
-        hess[:,2,0] = dp_dxz
-        hess[:,1,2] = dp_dyz
-        hess[:,2,1] = dp_dyz
-        hess[:,2,2] = dp_dzz
-        final = np.sqrt(np.mean( np.linalg.norm(hess,axis=(1,2),ord='fro')**2 ))
-        return final/initial

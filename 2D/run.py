@@ -74,18 +74,18 @@ for i,ratio in enumerate(frac):
 Func = MyProblem(pts, normals, num_cps, order, custom_dimensions, exact=exact)
 scaling, bases_surf, bases_curv = Func.get_values()
 
+# Key vector sizes
+num_cps_pts  = Func.num_cps_pts
+num_hess_pts = Func.num_hess_pts
+num_surf_pts = Func.num_surf_pts
+print('Num_hess_pts: ', num_hess_pts)
+print('Num_ctrl_pts: ', num_cps_pts)
+print('Num_surf_pts: ', num_surf_pts,'\n')
+
 if visualize_init:
     Func.visualize_current()
     plt.show()
     exit()
-
-# Key vector sizes
-num_cps_pts = len(Func.cps)
-num_hess_pts = len(Func.u['hess'])
-num_surf_pts = len(Func.u['surf'])
-print('Num_hess_pts: ', num_hess_pts)
-print('Num_ctrl_pts: ', num_cps_pts)
-print('Num_surf_pts: ', num_surf_pts,'\n')
 #################################
 EnergyMinModel = om.Group()
 EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
@@ -127,6 +127,7 @@ Prob.driver = om.pyOptSparseDriver()
 Prob.driver.options['optimizer'] = 'SNOPT'
 Prob.driver.opt_settings['Major iterations limit'] = 10000
 Prob.driver.opt_settings['Minor iterations limit'] = 10000
+# Prob.driver.opt_settings['Verify level'] = 0
 Prob.driver.opt_settings['Iterations limit'] = 150000
 Prob.driver.opt_settings['Major optimality tolerance'] = tol
 Prob.setup()
@@ -150,9 +151,9 @@ pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
 phi = phi/Func.Bbox_diag
 print('Surface error (rel): \n',
-        'Max: ',np.max(phi),'\n',
+        'Max: ',np.max(abs(phi)),'\n',
         'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
 print('Surface error (units): \n',
-        'Max: ',Func.Bbox_diag*np.max(phi),'\n',
+        'Max: ',Func.Bbox_diag*np.max(abs(phi)),'\n',
         'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
 print('END')

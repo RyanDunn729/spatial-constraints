@@ -11,6 +11,8 @@ class curv_sampling(ExplicitComponent):
         self.options.declare('bases')
 
     def setup(self):
+        scaling = self.options['scaling']
+        bases = self.options['bases']
         num_pts = self.options['num_pts']
         num_cps = self.options['num_cps']
         self.add_input('phi_cps',shape=(num_cps,))
@@ -21,6 +23,14 @@ class curv_sampling(ExplicitComponent):
             self.add_output('dp_dxz',shape=(num_pts,))
             self.add_output('dp_dyz',shape=(num_pts,))
             self.add_output('dp_dzz',shape=(num_pts,))
+
+        self.declare_partials(of='dp_dxx', wrt='phi_cps', val=scaling[0]*scaling[0]*bases[0])
+        self.declare_partials(of='dp_dxy', wrt='phi_cps', val=scaling[0]*scaling[1]*bases[1])
+        self.declare_partials(of='dp_dyy', wrt='phi_cps', val=scaling[1]*scaling[1]*bases[2])
+        if self.options['dim'] == 3:
+            self.declare_partials(of='dp_dxz', wrt='phi_cps', val=scaling[0]*scaling[2]*bases[3])
+            self.declare_partials(of='dp_dyz', wrt='phi_cps', val=scaling[1]*scaling[2]*bases[4])
+            self.declare_partials(of='dp_dzz', wrt='phi_cps', val=scaling[2]*scaling[2]*bases[5])
 
     def compute(self, inputs, outputs):
         scaling = self.options['scaling']
@@ -33,13 +43,42 @@ class curv_sampling(ExplicitComponent):
             outputs['dp_dyz'] = scaling[1]*scaling[2]*bases[4].dot(inputs['phi_cps'])
             outputs['dp_dzz'] = scaling[2]*scaling[2]*bases[5].dot(inputs['phi_cps'])
 
-    def setup_partials(self):
-        scaling = self.options['scaling']
-        bases = self.options['bases']
-        self.declare_partials(of='dp_dxx', wrt='phi_cps', val=scaling[0]*scaling[0]*bases[0])
-        self.declare_partials(of='dp_dxy', wrt='phi_cps', val=scaling[0]*scaling[1]*bases[1])
-        self.declare_partials(of='dp_dyy', wrt='phi_cps', val=scaling[1]*scaling[1]*bases[2])
-        if self.options['dim'] == 3:
-            self.declare_partials(of='dp_dxz', wrt='phi_cps', val=scaling[1]*scaling[2]*bases[3])
-            self.declare_partials(of='dp_dyz', wrt='phi_cps', val=scaling[1]*scaling[2]*bases[4])
-            self.declare_partials(of='dp_dzz', wrt='phi_cps', val=scaling[2]*scaling[2]*bases[5])
+if __name__ == '__main__':    
+    from openmdao.api import Problem, Group
+    import numpy as np
+    from scipy.sparse import csc_matrix
+
+    num_cps = 25
+    N = 20
+    dim = 3
+
+    scaling = np.random.rand(dim)
+    bbox_diag = 11.24124
+    Lp = 1e4
+    Ln = 1e2
+    Lr = 1e-2
+
+    def gen_sp_matrix(*args):
+        rand_matrix = np.random.rand(*args)
+        rand_matrix[rand_matrix<0.8] = 0
+        return csc_matrix(rand_matrix)
+
+    hessian_bases = [gen_sp_matrix(N,num_cps) for _ in range(int(dim*(dim+1)/2))]
+
+    group = Group()
+    comp = curv_sampling(
+        num_cps=num_cps,
+        num_pts=N,
+        dim=dim,
+        scaling=scaling,
+        bases=hessian_bases
+    )
+    group.add_subsystem('objective', comp, promotes = ['*'])
+        
+    prob = Problem()
+    prob.model = group
+    prob.setup()
+    prob['phi_cps'] = np.random.rand(num_cps)
+    prob.run_model()
+    prob.model.list_outputs()
+    prob.check_partials(compact_print=True)

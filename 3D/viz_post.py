@@ -6,16 +6,18 @@ import seaborn as sns
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from stl.mesh import Mesh
 from scipy.spatial import KDTree
-from modules.Hicken import KS_eval
+from utils.Hicken_Kaur import KS_eval
 
-sns.set()
-from matplotlib import rc
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
-rc('text', usetex=True)
-plt.rc('legend', fontsize=12)    # legend fontsize
-plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
+def set_fonts():
+    from matplotlib import rc
+    rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
+    rc('text', usetex=True)
+    plt.rc('legend', fontsize=12)    # legend fontsize
+    plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
+sns.set_style('ticks')
+set_fonts()
 
-save_mesh = True
+save_mesh = False
 res = 180
 isocontour = 0
 mesh_name = f'Opt_Mesh_{isocontour}.stl'
@@ -23,15 +25,15 @@ mesh_name = f'Opt_Mesh_{isocontour}.stl'
 size = (7.5,6.5)
 dpi = 100
 
-# Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
+Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 
 # Func = pickle.load( open( "SAVED_DATA/Opt_o4Bunny28_100000.pkl", "rb" ) )
 # Func = pickle.load( open( "Opt_Bunny_For_OffSurface1.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
 
-Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
-mesh_name = 'Opt_armadillo_.stl'
+# Func = pickle.load( open( "SAVED_DATA/Opt_armadillo_.pkl", "rb" ) )
+# mesh_name = 'Opt_armadillo_.stl'
 # Func = pickle.load( open( "SAVED_DATA/Opt_buddha_.pkl", "rb" ) )
 # mesh_name = 'Opt_buddha_.stl'
 # Func = pickle.load( open( "SAVED_DATA/Opt_dragon_.pkl", "rb" ) )
@@ -55,47 +57,47 @@ print('num_surf_pts: ',len(Func.surf_pts))
 
 gold = (198/255, 146/255, 20/255)
 
-# plt.figure(figsize=size,dpi=dpi)
-# ax = plt.axes()
-# res = 200
-# ones = np.ones(res)
-# diag = np.linspace(0,1,res)
-# basis = Func.Volume.get_basis_matrix(diag, 0.5*ones, 0.5*ones, 0, 0, 0)
-# pts = basis.dot(Func.cps[:,3])
-# ax.plot(diag, pts, '-', label='X-axis')
-# basis = Func.Volume.get_basis_matrix(0.5*ones, diag, 0.5*ones, 0, 0, 0)
-# pts = basis.dot(Func.cps[:,3])
-# ax.plot(diag, pts, '-', label='Y-axis')
-# basis = Func.Volume.get_basis_matrix(0.5*ones, 0.5*ones, diag, 0, 0, 0)
-# pts = basis.dot(Func.cps[:,3])
-# ax.plot(diag, pts, '-', label='Z-axis')
-# ax.axis([0,1,np.min(Func.cps[:,3]),np.max(Func.cps[:,3])])
-# ax.set_xticks([0,0.5,1])
-# ax.set_yticks([np.min(Func.cps[:,3]),0,np.max(Func.cps[:,3])])
-# ax.set_ylim(1.25*np.min(Func.cps[:,3]),1.25*np.max(Func.cps[:,3]))
-# ax.set_xlabel('Normalized Location')
-# ax.set_ylabel('Phi')
-# ax.set_title('Phi along 1D slices')
-# ax.legend()
+plt.figure(figsize=size,dpi=dpi)
+ax = plt.axes()
+res = 200
+ones = np.ones(res)
+diag = np.linspace(0,1,res)
+basis = Func.Volume.get_basis_matrix(diag, 0.5*ones, 0.5*ones, 0, 0, 0)
+pts = basis.dot(Func.cps[:,3])
+ax.plot(diag, pts, '-', label='X-axis')
+basis = Func.Volume.get_basis_matrix(0.5*ones, diag, 0.5*ones, 0, 0, 0)
+pts = basis.dot(Func.cps[:,3])
+ax.plot(diag, pts, '-', label='Y-axis')
+basis = Func.Volume.get_basis_matrix(0.5*ones, 0.5*ones, diag, 0, 0, 0)
+pts = basis.dot(Func.cps[:,3])
+ax.plot(diag, pts, '-', label='Z-axis')
+ax.axis([0,1,np.min(Func.cps[:,3]),np.max(Func.cps[:,3])])
+ax.set_xticks([0,0.5,1])
+ax.set_yticks([np.min(Func.cps[:,3]),0,np.max(Func.cps[:,3])])
+ax.set_ylim(1.25*np.min(Func.cps[:,3]),1.25*np.max(Func.cps[:,3]))
+ax.set_xlabel('Normalized Location')
+ax.set_ylabel('Phi')
+ax.set_title('Phi along 1D slices')
+ax.legend()
 
 ############ Plot pts > 0 #############
-# res = 45
-# u = np.einsum('i,j,k->ijk', np.linspace(0, 1, res), np.ones(res),np.ones(res)).flatten()
-# v = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(0, 1, res),np.ones(res)).flatten()
-# w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0, 1, res)).flatten()
-# pts = Func.Volume.evaluate_points(u, v, w)
-# fig = plt.figure(figsize=size,dpi=dpi)
-# ax = fig.add_subplot(111, projection='3d')
-# plt.plot(pts[pts[:,3]>0,0],pts[pts[:,3]>0,1],pts[pts[:,3]>0,2],'k.')
-# ax.set_xlabel("x")
-# ax.set_ylabel("y")
-# ax.set_zlabel("z")
-# ax.set_title('Pts > 0')
-# center = np.mean(Func.dimensions,axis=1)
-# d = np.max(np.diff(Func.dimensions,axis=1))
-# ax.set_xlim(center[0]-d/2, center[0]+d/2)
-# ax.set_ylim(center[1]-d/2, center[1]+d/2)
-# ax.set_zlim(center[2]-d/2, center[2]+d/2)
+res = 45
+u = np.einsum('i,j,k->ijk', np.linspace(0, 1, res), np.ones(res),np.ones(res)).flatten()
+v = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(0, 1, res),np.ones(res)).flatten()
+w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0, 1, res)).flatten()
+pts = Func.Volume.evaluate_points(u, v, w)
+fig = plt.figure(figsize=size,dpi=dpi)
+ax = fig.add_subplot(111, projection='3d')
+plt.plot(pts[pts[:,3]>0,0],pts[pts[:,3]>0,1],pts[pts[:,3]>0,2],'k.')
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.set_zlabel("z")
+ax.set_title('Pts > 0')
+center = np.mean(Func.dimensions,axis=1)
+d = np.max(np.diff(Func.dimensions,axis=1))
+ax.set_xlim(center[0]-d/2, center[0]+d/2)
+ax.set_ylim(center[1]-d/2, center[1]+d/2)
+ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 ############ Local Error #############
 # res = 2
@@ -133,35 +135,35 @@ gold = (198/255, 146/255, 20/255)
 
 # plt.savefig('PDF_figures/Err_v_ep.pdf',bbox_inches='tight')
 
-# plt.figure(figsize=size,dpi=dpi)
-# res = 50
-# ax = plt.axes(projection='3d')
-# x = Func.dimensions[0]
-# y = Func.dimensions[1]
-# z = Func.dimensions[2]
-# u = np.einsum('i,j,k->ijk', np.linspace(0,1,res), np.ones(res),np.ones(res)).flatten()
-# v = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(0,1,res),np.ones(res)).flatten()
-# w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0,1,res)).flatten()
-# basis = Func.Volume.get_basis_matrix(u, v, w, 0, 0, 0)
-# phi = basis.dot(Func.cps[:,3]).reshape((res,res,res))
-# verts, faces,_,_ = marching_cubes(phi, 0)
-# verts = verts*np.diff(Func.dimensions).flatten()/(res-1) + Func.dimensions[:,0]
-# level_set = Poly3DCollection(verts[faces],linewidth=0.25,alpha=1,facecolor=gold,edgecolor='k')
-# ax.add_collection3d(level_set)
-# # ax.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],Func.surf_pts[:,2],
-# #         'k.',label='surface points')
-# ax.set_xlabel("x")
-# ax.set_ylabel("y")
-# ax.set_zlabel("z")
-# ax.set_title('Current Level Set $n_{\Gamma}$=%i'%len(Func.surf_pts))
-# ax.set_xticks([x[0],(x[1]+x[0])/2,x[1]])
-# ax.set_yticks([y[0],(y[1]+y[0])/2,y[1]])
-# ax.set_zticks([z[0],(z[1]+z[0])/2,z[1]])
-# center = np.mean(Func.dimensions,axis=1)
-# d = np.max(np.diff(Func.dimensions,axis=1))
-# ax.set_xlim(center[0]-d/2, center[0]+d/2)
-# ax.set_ylim(center[1]-d/2, center[1]+d/2)
-# ax.set_zlim(center[2]-d/2, center[2]+d/2)
+plt.figure(figsize=size,dpi=dpi)
+res = 50
+ax = plt.axes(projection='3d')
+x = Func.dimensions[0]
+y = Func.dimensions[1]
+z = Func.dimensions[2]
+u = np.einsum('i,j,k->ijk', np.linspace(0,1,res), np.ones(res),np.ones(res)).flatten()
+v = np.einsum('i,j,k->ijk', np.ones(res), np.linspace(0,1,res),np.ones(res)).flatten()
+w = np.einsum('i,j,k->ijk', np.ones(res), np.ones(res),np.linspace(0,1,res)).flatten()
+basis = Func.Volume.get_basis_matrix(u, v, w, 0, 0, 0)
+phi = basis.dot(Func.cps[:,3]).reshape((res,res,res))
+verts, faces,_,_ = marching_cubes(phi, 0)
+verts = verts*np.diff(Func.dimensions).flatten()/(res-1) + Func.dimensions[:,0]
+level_set = Poly3DCollection(verts[faces],linewidth=0.25,alpha=1,facecolor=gold,edgecolor='k')
+ax.add_collection3d(level_set)
+# ax.plot(Func.surf_pts[:,0],Func.surf_pts[:,1],Func.surf_pts[:,2],
+#         'k.',label='surface points')
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.set_zlabel("z")
+ax.set_title('Current Level Set $n_{\Gamma}$=%i'%len(Func.surf_pts))
+ax.set_xticks([x[0],(x[1]+x[0])/2,x[1]])
+ax.set_yticks([y[0],(y[1]+y[0])/2,y[1]])
+ax.set_zticks([z[0],(z[1]+z[0])/2,z[1]])
+center = np.mean(Func.dimensions,axis=1)
+d = np.max(np.diff(Func.dimensions,axis=1))
+ax.set_xlim(center[0]-d/2, center[0]+d/2)
+ax.set_ylim(center[1]-d/2, center[1]+d/2)
+ax.set_zlim(center[2]-d/2, center[2]+d/2)
 
 if save_mesh:
     x = Func.dimensions[0]

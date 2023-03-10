@@ -6,7 +6,6 @@ import numpy as np
 
 class MyProblem(object):
     def __init__(self, surf_pts, normals, num_cps, order, dimensions, exact=None):
-        k = 6 # Num of nearest points to garuntee interior or exterior point
         self.order = order
         self.u = {}
         self.v = {}
@@ -34,7 +33,7 @@ class MyProblem(object):
         self.Bbox_diag = np.linalg.norm(diff)
 
         # Get initial control points
-        self.cps = self.init_cps_Hicken(k=k,rho=10)
+        self.cps = self.init_cps_Hicken(k=6,rho=10)
 
         # Standard uniform knot vectors
         kv_u = self.std_uniform_knot_vec(num_cps[0], order)
@@ -57,7 +56,7 @@ class MyProblem(object):
         self.dA = self.area/(num_hess)
 
         self.num_surf_pts = int(len(surf_pts))
-        self.num_cps_pts = int(np.product(num_cps))
+        self.num_cps_pts  = int(np.product(num_cps))
         self.num_hess_pts = int(num_hess)
 
         print('BBox with border: \n',self.dimensions,'\n')
@@ -116,14 +115,14 @@ class MyProblem(object):
         exp = np.exp(-rho*d_norm)
         Dx = dataset.data[indices] - np.reshape(cps[:,0:2],(np.product(self.num_cps),1,2))
         phi = np.einsum('ijk,ijk,ij->i',Dx,self.exact[1][indices],exp)/np.sum(exp,axis=1)
+        np.random.seed(1)
         phi += 1e-3*self.Bbox_diag*(2*np.random.rand(np.product(self.num_cps))-1)
         cps[:,2] = phi/self.Bbox_diag
         return cps
 
-    def visualize_current(self):
+    def visualize_current(self,res=500):
         x = self.dimensions[0]
         y = self.dimensions[1]
-        res = 500
         sns.set()
         plt.figure()
         ax = plt.axes()
@@ -202,6 +201,21 @@ class MyProblem(object):
         hess_02 = self.Surface.get_basis_matrix(self.u['hess'],self.v['hess'],0,2)
         bases_curv = np.stack((hess_20,hess_11,hess_02))
         return bases_surf, bases_curv
+
+    def eval_pts(self,pts):
+        u,v = self.spatial_to_parametric(pts)
+        b = self.Surface.get_basis_matrix(u,v,0,0)
+        return b.dot(self.cps[:,2])
+    
+    def gradient_eval(self,pts):
+        dxy = np.diff(self.dimensions).flatten()
+        scaling = 1/dxy
+        u,v = self.spatial_to_parametric(pts)
+        bdx = self.Surface.get_basis_matrix(u,v,1,0)
+        dpdx = bdx.dot(self.cps[:,2])*scaling[0]
+        bdy = self.Surface.get_basis_matrix(u,v,0,1)
+        dpdy = bdy.dot(self.cps[:,2])*scaling[1]
+        return dpdx, dpdy
 
     def eval_surface(self):
         u,v = self.spatial_to_parametric(self.exact[0])

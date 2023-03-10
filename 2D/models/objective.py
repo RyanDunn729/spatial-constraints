@@ -56,7 +56,7 @@ class Objective(ExplicitComponent):
         if dim == 3:
             nz = normals[:,2]/bbox_diag
 
-        Er = inputs['Fnorm']/num_samp
+        Er = inputs['Fnorm']/num_samp/num_samp
         Ep = np.sum(inputs['phi_surf']**2)/num_surf
         En = np.sum((inputs['dpdx_surf']+nx)**2)/num_surf
         En += np.sum((inputs['dpdy_surf']+ny)**2)/num_surf
@@ -87,7 +87,7 @@ class Objective(ExplicitComponent):
             nz = normals[:,2]/bbox_diag
 
         partials['objective','phi_surf'] = 2*Lp*inputs['phi_surf']/num_surf
-        partials['objective','Fnorm'] = Lr/num_samp
+        partials['objective','Fnorm'] = Lr/num_samp/num_samp
         partials['objective','dpdx_surf'] = 2*Ln*(inputs['dpdx_surf']+nx)/num_surf
         partials['objective','dpdy_surf'] = 2*Ln*(inputs['dpdy_surf']+ny)/num_surf
         if dim==3:

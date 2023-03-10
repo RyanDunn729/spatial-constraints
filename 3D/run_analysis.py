@@ -1,9 +1,9 @@
 from modules.Bspline_Volume import BSplineVolume
-from modules.read_stl import extract_stl_info
-from modules.Fred_method import Freds_Method
+from utils.read_stl import extract_stl_info
+from utils.Lin_et_al import Lin_et_al_Method
 from skimage.measure import marching_cubes
-from modules.ellipsoid import Ellipsoid
-from modules.Hicken import KS_eval, Continuous_Hicken_eval
+from geom_shapes.ellipsoid import Ellipsoid
+from utils.Hicken_Kaur import KS_eval, Continuous_Hicken_eval
 from modules.Analyze import model
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
@@ -73,8 +73,8 @@ data = np.logspace(-4,4,9)
 
 if file[2:-2]=='Heart':
     tol = 1e-4
-    exact = extract_stl_info("stl-files/Heart_exact.stl")
-    main_name = 'stl-files/Heart_'
+    exact = extract_stl_info("geom_shapes/Heart_exact.stl")
+    main_name = 'geom_shapes/Heart_'
     pt_data = [127,177,214,252,302,352]
 elif file[2:-2]=='Ellipsoid':
     a = 8
@@ -87,8 +87,8 @@ elif file[2:-2]=='Ellipsoid':
     pt_data = [100,200,300,400,500]
 elif file[2:-2]=='Bunny':
     tol = 1e-4
-    exact = extract_stl_info("stl-files/Bunny_exact.stl")
-    main_name = 'stl-files/Bunny_'
+    exact = extract_stl_info("geom_shapes/Bunny_exact.stl")
+    main_name = 'geom_shapes/Bunny_'
     group = 6
     pt_data = [500,808,1310,2120,3432,5555,9000,14560,25000,38160,64000,100000]
 
@@ -102,7 +102,7 @@ if mode=='Hicken_analysis':
             surf_pts = e.points(num_pts)
             normals = e.unit_pt_normals(num_pts)
         # elif flag == 'Dragon':
-        #     filename = 'stl-files/dragon_100k.stl'
+        #     filename = 'geom_shapes/dragon_100k.stl'
         #     surf_pts, normals = extract_stl_info(filename)
         else:
             filename = main_name+str(num_pts)+'.stl'
@@ -154,7 +154,7 @@ if mode == 'Bspline_analysis_vary_L1':
     L2 = L[1]
     L3 = L[2]
     m = model(max_cps,R,border,dim,tol,exact,soft_const)
-    surf_pts, normals = extract_stl_info('stl-files/Bunny_25000.stl')
+    surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
     for i,L1 in enumerate(L1_data):
         if i<6:
             continue
@@ -170,7 +170,7 @@ if mode == 'Bspline_analysis_vary_L2':
     print(L2_data)
     L3 = L[2]
     m = model(max_cps,R,border,dim,tol,exact,soft_const)
-    surf_pts, normals = extract_stl_info('stl-files/Bunny_25000.stl')
+    surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
     for i,L2 in enumerate(L2_data):
         Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
         pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_L2_"+str(i)+".pkl","wb"))
@@ -184,7 +184,7 @@ if mode == 'Bspline_analysis_vary_L3':
     L3_data = L[2]*data
     print(L3_data)
     m = model(max_cps,R,border,dim,tol,exact,soft_const)
-    surf_pts, normals = extract_stl_info('stl-files/Bunny_25000.stl')
+    surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
     for i,L3 in enumerate(L3_data):
         Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
         pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_L3_"+str(i)+".pkl","wb"))
@@ -549,7 +549,7 @@ if mode == 'Hicken_v_Splines':
     k = 20
     rho = 1e-3
     num_samples = 50000
-    bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
+    bunny_exact = extract_stl_info( "geom_shapes/Bunny_exact.stl" )
     exact_dataset = KDTree(bunny_exact[0])
     np.random.seed(1)
     rng = np.random.default_rng()
@@ -648,7 +648,7 @@ if mode == 'Comp_time':
     k = 10
     rho = 20
     num_samples = 100000
-    bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
+    bunny_exact = extract_stl_info( "geom_shapes/Bunny_exact.stl" )
 
     ### Evaluate points on the surface (MAY FAVOR KDTREES) ###
     np.random.seed(1)
@@ -685,7 +685,7 @@ if mode == 'Comp_time':
         time_Bsplines_1000[i] = (t2-t1) / len(phi)
 
         # t1 = time.perf_counter()
-        # phi = Freds_Method(down_exact_pts,Func.surf_pts,Func.normals)
+        # phi = Lin_et_al_Method(down_exact_pts,Func.surf_pts,Func.normals)
         # t2 = time.perf_counter()
         # time_FredMethod[i] = (t2-t1) / len(phi)
 
@@ -759,7 +759,7 @@ if mode == 'normalized_Hicken_v_Splines':
     k = 20
     rho = 1e-3
     num_samples = 10000
-    bunny_exact = extract_stl_info( "stl-files/Bunny_exact.stl" )
+    bunny_exact = extract_stl_info( "geom_shapes/Bunny_exact.stl" )
     exact_dataset = KDTree(bunny_exact[0])
     np.random.seed(1)
     rng = np.random.default_rng()
@@ -851,7 +851,7 @@ if mode == 'normalized_Hicken_v_Splines':
     # print(RMS_err_KSmethod)
 
 if mode == 'plot_point_cloud':
-    surf_pts, normals = extract_stl_info('stl-files/Bunny_2002.stl')
+    surf_pts, normals = extract_stl_info('geom_shapes/Bunny_2002.stl')
     ax = plt.axes(projection='3d')
     ax.plot3D(surf_pts[:,0],surf_pts[:,1],surf_pts[:,2],'k.',markersize=10)
     ax.grid(False)

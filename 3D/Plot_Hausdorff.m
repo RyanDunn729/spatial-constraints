@@ -5,7 +5,7 @@ max_haus = 0.01;
 figure('Position',[100 100 992.5 310])
 counter = 1;
 
-exact_file = 'stl-files/bunny_exact.stl';
+exact_file = 'geom_shapes/bunny_exact.stl';
 [vertices1, faces1] = read_ply(exact_file);
 for i = -0.01:0.005:0.01
     sample_file = sprintf('SAVED_DATA/Opt_Mesh_%0.3f.stl',i);

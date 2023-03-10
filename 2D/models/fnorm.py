@@ -78,13 +78,13 @@ if __name__ == '__main__':
 
     prob.setup()
 
-    prob['dp_dxx'] = np.random.rand(num_pts,)
-    prob['dp_dxy'] = np.random.rand(num_pts,)
-    prob['dp_dyy'] = np.random.rand(num_pts,)
+    prob['dp_dxx'] = np.random.rand(num_pts)
+    prob['dp_dxy'] = np.random.rand(num_pts)
+    prob['dp_dyy'] = np.random.rand(num_pts)
     if dim == 3:
-        prob['dp_dxz'] = np.random.rand(num_pts,)
-        prob['dp_dyz'] = np.random.rand(num_pts,)
-        prob['dp_dzz'] = np.random.rand(num_pts,)
+        prob['dp_dxz'] = np.random.rand(num_pts)
+        prob['dp_dyz'] = np.random.rand(num_pts)
+        prob['dp_dzz'] = np.random.rand(num_pts)
 
     prob.run_model()
     prob.model.list_outputs()
