@@ -1,5 +1,6 @@
 from models.EnergyMinProblem import EnergyMinProblem
 from geom_shapes.ellipsoid import Ellipsoid
+from geom_shapes.Sphere import Sphere
 from models.base_3D import MyProblem
 from utils.read_stl import extract_stl_info
 import csdl
@@ -21,15 +22,15 @@ dim = 3
 order = 4
 border = 0.15
 
-Lp = 1e3  # Surface weighting
-Ln = 1e1  # Gradient weighting
-Lr = 1e-1  # Curvature weighting
+Lp = 1e0  # Surface weighting
+Ln = 1e0  # Gradient weighting
+Lr = 1e-4  # Curvature weighting
 
 # Include an extremely high res sample if needed
 exact_filename = None
 
 ### BUNNY ###
-max_cps = 28
+max_cps = 26
 flag = 'Bunny'
 tol = 5e-4
 filename = 'geom_shapes/Bunny_9000.stl'
@@ -40,11 +41,11 @@ filename = 'geom_shapes/Bunny_9000.stl'
 # tol = 1e-4
 # filename = 'geom_shapes/dragon_100k.stl'
 
-### Armadillo ###
-# max_cps = 31
-# flag = 'Armadillo'
-# tol = 1e-4
-# filename = 'geom_shapes/armadillo_100k.stl'
+## Armadillo ###
+max_cps = 26
+flag = 'Armadillo'
+tol = 1e-4
+filename = 'geom_shapes/armadillo_100k.stl'
 
 ### Buddha ###
 # max_cps = 37
@@ -53,13 +54,16 @@ filename = 'geom_shapes/Bunny_9000.stl'
 # filename = 'geom_shapes/buddha_100k.stl'
 
 ### Ellipsoid ###
-# max_cps = 42
-# flag = 'Ellipsoid'
-# tol = 1e-5
+max_cps = 24
+flag = 'Ellipsoid'
+tol = 1e-4
+num_pts = 500
+
+### Sphere ###
+# max_cps = 16
+# flag = 'Sphere'
+# tol = 5e-5
 # num_pts = 500
-# a = 8
-# b = 7.25
-# c = 5.75
 
 visualize_init = False
 
@@ -84,13 +88,19 @@ visualize_init = False
 
 ######### Get Surface #########
 if flag == 'Ellipsoid':
-    num_pts = 500
     num_exact_pts = 10000
-    a = 8
-    b = 7.25
-    c = 5.75
+    a = 1
+    b = 18
+    c = 5
     e = Ellipsoid(a,b,c)
     exact = np.stack((e.points(num_exact_pts),e.unit_pt_normals(num_exact_pts)))
+    surf_pts = e.points(num_pts)
+    normals = e.unit_pt_normals(num_pts)
+if flag == 'Sphere':
+    num_exact_pts = 10000
+    radius = 0.001
+    e = Sphere(radius)
+    exact = (e.points(num_exact_pts),e.unit_pt_normals(num_exact_pts))
     surf_pts = e.points(num_pts)
     normals = e.unit_pt_normals(num_pts)
 elif exact_filename is not None:
@@ -98,11 +108,14 @@ elif exact_filename is not None:
     exact = extract_stl_info(exact_filename)
 else:
     surf_pts, normals = extract_stl_info(filename)
-    exact = extract_stl_info("geom_shapes/{}_exact.stl".format(flag))
-
+    try:
+        exact = extract_stl_info("geom_shapes/{}_exact.stl".format(flag))
+    except:
+        exact = (surf_pts, normals)
 ######### Initialize Volume #########
 Func = MyProblem(surf_pts, normals, max_cps, border, order, exact=exact)
-scaling, bases_surf, bases_curv = Func.get_values()
+scaling = Func.scaling
+phi_init = Func.cps[:,3]
 # Key vector sizes
 num_surf_pts = Func.num_surf_pts
 num_cps_pts  = Func.num_cps_pts
@@ -143,13 +156,12 @@ model.add(EnergyMinProblem(
     normals=normals,
     bbox_diag=float(Func.Bbox_diag),
     verbose=True,
-    dq=float(1/num_hess_pts),
 ))
 model.add_design_variable("phi_cps", lower=-1, upper=1)
 model.add_objective("objective", scaler=1)
 #################################
 sim = Simulator(model)
-sim["phi_cps"] = Func.cps[:,3]
+sim["phi_cps"] = phi_init
 sim.run()
 #################################
 prob = CSDLProblem(
@@ -173,16 +185,16 @@ t2 = time.time()
 print('Runtime: ',t2-t1)
 print('Final Objective Value: ',sim["objective"])
 Func.runtime = t2-t1
-Func.set_cps(Func.Bbox_diag*sim['phi_cps'])
+Func.set_cps(sim['phi_cps']*Func.Bbox_diag)
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
 phi = Func.eval_surface()
+print('Surface error (units): \n',
+        'Max: ',np.max(abs(phi)),'\n',
+        'RMS: ',np.sqrt(np.mean(phi**2)))
 phi = phi/Func.Bbox_diag
 print('Surface error (rel): \n',
         'Max: ',np.max(abs(phi)),'\n',
         'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
-print('Surface error (units): \n',
-        'Max: ',Func.Bbox_diag*np.max(abs(phi)),'\n',
-        'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
 print("Ep: ",sim["Ep"])
 print("En: ",sim["En"])
 print("Er: ",sim["Er"])

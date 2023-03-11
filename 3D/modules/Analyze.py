@@ -1,8 +1,7 @@
-from modules.soft_objective import soft_objective
+from modules.objective import Objective
 from modules.curv_samp import curv_sampling
 from modules.surf_samp import surf_sampling
 from skimage.measure import marching_cubes
-from modules.assm_hess import assm_hess
 from modules.fnorm import Fnorm
 from modules.base import MyProblem
 from stl.mesh import Mesh
@@ -22,86 +21,65 @@ class model(object):
         self.exact = exact
         self.soft_const = soft_const
 
-    def inner_solve(self,surf_pts,normals,L1,L2,L3,order,init_manual=None):
-        print('L1={}'.format(L1))
-        print('L2={}'.format(L2))
-        print('L3={}'.format(L3))
+    def inner_solve(self,surf_pts,normals,Lr,Ln,Lp,order,init_manual=None):
+        print('Lr={}'.format(Lr))
+        print('Ln={}'.format(Ln))
+        print('Lp={}'.format(Lp))
         dim = self.dim
-        soft_const = self.soft_const
         ######### Initialize Volume #########
         Func = MyProblem(self.exact, surf_pts, normals, self.max_cps, self.R, self.border, order)
-        scaling, dV, V, bases_surf, bases_curv = Func.get_values()
+        scaling, bases_surf, bases_curv = Func.get_values()
 
         # Key vector sizes
-        num_cps_pts = Func.num_cps_pts
+        num_cps_pts  = Func.num_cps_pts
         num_hess_pts = Func.num_hess_pts
-        num_surf_pts = len(surf_pts)
+        num_surf_pts = Func.num_surf_pts
 
         #################################
-        class Curvature_Objective(ot.Group):
-            def setup(self):
-                H = self.declare_input('hessians',shape=(num_hess_pts,dim,dim))
-                dV = self.declare_input('dV',shape=(1,))
-                V = self.declare_input('V',shape=(1,))
-                Fnorm = ot.pnorm(H,axis=(1,2))
-                self.register_output('Curvature_Metric',ot.sum(Fnorm**2)*dV/V)
+        EnergyMinModel = om.Group()
+        EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
+                num_cps=num_cps_pts,
+                num_pts=num_hess_pts,
+                dim=dim,
+                scaling=scaling,
+                bases=bases_curv
+            ),promotes=['*'])
+        EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
+                num_cps=num_cps_pts,
+                num_pts=num_surf_pts,
+                dim=dim,
+                scaling=scaling,
+                bases=bases_surf,
+            ),promotes=['*'])
+        EnergyMinModel.add_subsystem('Fnorms',Fnorm(
+                num_pts=num_hess_pts,
+                dim=dim,
+            ),promotes=['*'])
+        EnergyMinModel.add_subsystem('Objective',Objective(
+                num_samp=num_hess_pts,
+                num_surf=num_surf_pts,
+                dim=dim,
+                Lp=Lp,
+                Ln=Ln,
+                Lr=Lr,
+                normals=normals,
+                bbox_diag=float(Func.Bbox_diag),
+                verbose=True,
+            ),promotes=['*'])
         #################################
-        inputs = ot.Group()
-        inputs.create_indep_var('phi_cps', shape=(num_cps_pts,))
-        inputs.create_indep_var('dV',val=dV)
-        inputs.create_indep_var('V',val=V)
-        inputs.create_indep_var('lambdas',val=np.array([L1,L2,L3]))
-        #################################
-        objective = ot.Group()
-        comp = curv_sampling(dim=dim,num_cps=num_cps_pts,num_pts=num_hess_pts,
-                            bases=bases_curv,scaling=scaling)
-        objective.add_subsystem('Curvature_Samples',comp,promotes=['*'])
-        comp = assm_hess(dim=dim,num_pts=num_hess_pts)
-        objective.add_subsystem('Assemble_Hessians',comp,promotes=['*'])
-        if not soft_const:
-            comp = Curvature_Objective()
-            objective.add_subsystem('Curvature',comp,promotes=['*'])
-        elif soft_const:
-            comp = surf_sampling(num_cps=num_cps_pts,num_pts=num_surf_pts,dim=dim,
-                                scaling=scaling,bases=bases_surf)
-            objective.add_subsystem('Surface_Sampling',comp,promotes=['*'])
-            objective.add_subsystem('Fnorms',Fnorm(num_pts=num_hess_pts,dim=dim),promotes=['*'])
-            comp = soft_objective(num_samp=num_hess_pts,num_surf=num_surf_pts,dim=dim,normals=normals)
-            objective.add_subsystem('Penals',comp,promotes=['*'])
-        #################################
-        if not soft_const:
-            constraint = ot.Group()
-            comp = surf_sampling(num_cps=num_cps_pts,num_pts=num_surf_pts,dim=dim,
-                                scaling=scaling,bases=bases_surf)
-            constraint.add_subsystem('Surface_Sampling',comp,promotes=['*'])
-        #################################
-        Prob = om.Problem()
-        model = Prob.model
-        model.add_subsystem('Inputs_Group', inputs, promotes=['*'])
-        model.add_subsystem('Objective_Group', objective, promotes=['*'])
-        if not soft_const:
-            model.add_subsystem('Constraints_Group', constraint, promotes=['*'])
-
-        model.add_design_var('phi_cps',lower=-1,upper=1)
-        if soft_const:
-            model.add_objective('soft_objective',scaler=1)
-        else:
-            model.add_objective('Curvature_Metric',scaler=1)
-            model.add_constraint('phi_surf',equals=np.zeros(num_surf_pts),linear=True)
-            model.add_constraint('dpdx_surf',equals=-normals[:,0],linear=True)
-            model.add_constraint('dpdy_surf',equals=-normals[:,1],linear=True)
-            model.add_constraint('dpdz_surf',equals=-normals[:,2],linear=True)
+        # Prob = Problem()
+        Prob = om.Problem(EnergyMinModel)
+        Prob.model.add_design_var('phi_cps',lower=-1,upper=1)
+        Prob.model.add_objective('objective',scaler=1)
         #################################
         Prob.driver = om.pyOptSparseDriver()
         Prob.driver.options['optimizer'] = 'SNOPT'
         Prob.driver.opt_settings['Major iterations limit'] = 10000
         Prob.driver.opt_settings['Minor iterations limit'] = 10000
-        Prob.driver.opt_settings['Iterations limit'] = 50000
-        Prob.driver.opt_settings['Major feasibility tolerance'] = 1e-9
+        # Prob.driver.opt_settings['Verify level'] = 0
+        Prob.driver.opt_settings['Iterations limit'] = 150000
         Prob.driver.opt_settings['Major optimality tolerance'] = self.tol
-        Prob.driver.opt_settings['Minor feasibility tolerance'] = 1e-9
-        #################################
-        Prob.setup(force_alloc_complex=True)
+        Prob.setup()
         #################################
         if init_manual:
             Prob['phi_cps'] = init_manual
@@ -115,9 +93,6 @@ class model(object):
         #################################
         print('Runtime: ',t2-t1)
         Func.runtime = t2-t1
-        Func.E, Func.E_norm = Func.get_energy_terms(Prob)
-        print('Energies: ',Func.E)
-        print('Scaled Energies: ',Func.E_norm)
         Func.set_cps(Prob['phi_cps']*Func.Bbox_diag)
         del Prob
         return Func

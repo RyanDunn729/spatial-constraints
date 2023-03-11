@@ -37,7 +37,6 @@ class Fnorm(ExplicitComponent):
             dxz = inputs['dp_dxz']
             dyz = inputs['dp_dyz']
             dzz = inputs['dp_dzz']
-        
         Fnorm = dxx**2 + 2*dxy**2 + dyy**2
         if dim == 3:
             Fnorm += 2*dxz**2 + 2*dyz**2 + dzz**2
@@ -78,13 +77,13 @@ if __name__ == '__main__':
 
     prob.setup()
 
-    prob['dp_dxx'] = np.random.rand(num_pts)
-    prob['dp_dxy'] = np.random.rand(num_pts)
-    prob['dp_dyy'] = np.random.rand(num_pts)
+    prob['dp_dxx'] = np.random.rand(num_pts,)
+    prob['dp_dxy'] = np.random.rand(num_pts,)
+    prob['dp_dyy'] = np.random.rand(num_pts,)
     if dim == 3:
-        prob['dp_dxz'] = np.random.rand(num_pts)
-        prob['dp_dyz'] = np.random.rand(num_pts)
-        prob['dp_dzz'] = np.random.rand(num_pts)
+        prob['dp_dxz'] = np.random.rand(num_pts,)
+        prob['dp_dyz'] = np.random.rand(num_pts,)
+        prob['dp_dzz'] = np.random.rand(num_pts,)
 
     prob.run_model()
     prob.model.list_outputs()

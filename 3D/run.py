@@ -139,7 +139,7 @@ else:
 ######### Initialize Volume #########
 Func = MyProblem(surf_pts, normals, max_cps, border, order, exact=exact)
 scaling, bases_surf, bases_curv = Func.get_values()
-
+phi_init = Func.cps[:,3]
 # Key vector sizes
 num_cps_pts  = Func.num_cps_pts
 num_hess_pts = Func.num_hess_pts
@@ -153,13 +153,28 @@ if visualize_init:
     plt.show()
     exit()
 #################################
+basis_200 = Func.get_basis('hess',du=2,dv=0,dw=0)
+basis_110 = Func.get_basis('hess',du=1,dv=1,dw=0)
+basis_020 = Func.get_basis('hess',du=0,dv=2,dw=0)
+basis_101 = Func.get_basis('hess',du=1,dv=0,dw=1)
+basis_011 = Func.get_basis('hess',du=0,dv=1,dw=1)
+basis_002 = Func.get_basis('hess',du=0,dv=0,dw=2) 
+dxx = scaling[0]*scaling[0]*basis_200.dot(phi_init)
+dxy = scaling[0]*scaling[1]*basis_110.dot(phi_init)
+dyy = scaling[1]*scaling[1]*basis_020.dot(phi_init)
+dxz = scaling[0]*scaling[2]*basis_101.dot(phi_init)
+dyz = scaling[1]*scaling[2]*basis_011.dot(phi_init)
+dzz = scaling[2]*scaling[2]*basis_002.dot(phi_init)
+Er0 = np.sum( dxx**2 + 2*dxy**2 + dyy**2 + 2*dxz**2 + 2*dyz**2 + dzz**2) / num_hess_pts
+#################################
 EnergyMinModel = om.Group()
 EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
         num_cps=num_cps_pts,
         num_pts=num_hess_pts,
         dim=dim,
         scaling=scaling,
-        bases=bases_curv
+        bases=bases_curv,
+        bbox_diag=float(Func.Bbox_diag),
     ),promotes=['*'])
 EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
         num_cps=num_cps_pts,
@@ -167,6 +182,7 @@ EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
         dim=dim,
         scaling=scaling,
         bases=bases_surf,
+        bbox_diag=float(Func.Bbox_diag),
     ),promotes=['*'])
 EnergyMinModel.add_subsystem('Fnorms',Fnorm(
         num_pts=num_hess_pts,
@@ -180,7 +196,6 @@ EnergyMinModel.add_subsystem('Objective',Objective(
         Ln=Ln,
         Lr=Lr,
         normals=normals,
-        bbox_diag=float(Func.Bbox_diag),
         verbose=True,
     ),promotes=['*'])
 #################################

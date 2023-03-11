@@ -11,7 +11,6 @@ class Objective(ExplicitComponent):
         self.options.declare('Ln', types=float)
         self.options.declare('Lr', types=float)
         self.options.declare('normals', types=np.ndarray)
-        self.options.declare('bbox_diag',types=float)
         self.options.declare('verbose',types=bool)
 
     def setup(self):
@@ -22,7 +21,6 @@ class Objective(ExplicitComponent):
         Ln = self.options['Ln']
         Lr = self.options['Lr']
         normals = self.options['normals']
-        bbox_diag = self.options['bbox_diag']
         verbose = self.options['verbose']
         
         self.add_input('phi_surf',shape=(num_surf,))
@@ -48,15 +46,14 @@ class Objective(ExplicitComponent):
         Ln = self.options['Ln']
         Lr = self.options['Lr']
         normals = self.options['normals']
-        bbox_diag = self.options['bbox_diag']
         verbose = self.options['verbose']
 
-        nx = normals[:,0]/bbox_diag
-        ny = normals[:,1]/bbox_diag
+        nx = normals[:,0]
+        ny = normals[:,1]
         if dim == 3:
-            nz = normals[:,2]/bbox_diag
+            nz = normals[:,2]
 
-        Er = inputs['Fnorm']/num_samp/num_samp
+        Er = inputs['Fnorm']/num_samp
         Ep = np.sum(inputs['phi_surf']**2)/num_surf
         En = np.sum((inputs['dpdx_surf']+nx)**2)/num_surf
         En += np.sum((inputs['dpdy_surf']+ny)**2)/num_surf
@@ -78,16 +75,15 @@ class Objective(ExplicitComponent):
         Ln = self.options['Ln']
         Lr = self.options['Lr']
         normals = self.options['normals']
-        bbox_diag = self.options['bbox_diag']
         verbose = self.options['verbose']
 
-        nx = normals[:,0]/bbox_diag
-        ny = normals[:,1]/bbox_diag
+        nx = normals[:,0]
+        ny = normals[:,1]
         if dim == 3:
-            nz = normals[:,2]/bbox_diag
+            nz = normals[:,2]
 
         partials['objective','phi_surf'] = 2*Lp*inputs['phi_surf']/num_surf
-        partials['objective','Fnorm'] = Lr/num_samp/num_samp
+        partials['objective','Fnorm'] = Lr/num_samp
         partials['objective','dpdx_surf'] = 2*Ln*(inputs['dpdx_surf']+nx)/num_surf
         partials['objective','dpdy_surf'] = 2*Ln*(inputs['dpdy_surf']+ny)/num_surf
         if dim==3:
@@ -117,7 +113,6 @@ if __name__ == '__main__':
         Ln=0.5124,
         Lr=0.5124587,
         normals=normals,
-        bbox_diag=0.12378,
         verbose=False,
     )
     group.add_subsystem('objective', comp, promotes = ['*'])

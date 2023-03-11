@@ -15,12 +15,12 @@ class EnergyMinProblem(csdl.Model):
         self.parameters.declare('Ln',      types=float)
         self.parameters.declare('Lr',      types=float)
         self.parameters.declare('normals', types=np.ndarray)
+        self.parameters.declare('bbox_diag',    types=float)
+        self.parameters.declare('verbose',      types=bool)
+        # Bspline bases are sparse -> they must be a parameter
         self.parameters.declare('scalar_basis',  types=sps.spmatrix)
         self.parameters.declare('gradient_bases',types=list)
         self.parameters.declare('hessian_bases', types=list)
-        self.parameters.declare('bbox_diag',    types=float)
-        self.parameters.declare('verbose',      types=bool)
-        self.parameters.declare('dq',      types=float)
 
     def define(self):
         # Parameters
@@ -37,7 +37,6 @@ class EnergyMinProblem(csdl.Model):
         Lp = self.parameters['Lp']
         Ln = self.parameters['Ln']
         Lr = self.parameters['Lr']
-        dq = self.parameters['dq']
         N = self.parameters['N']
         # Design Variables
         phi_cps = self.declare_variable('phi_cps',shape=(num_cps,))
@@ -54,30 +53,30 @@ class EnergyMinProblem(csdl.Model):
             basis_011 = hessian_bases[4]
             basis_002 = hessian_bases[5]  
         # Sampling the Bsplines
-        phi_surf = csdl.matvec(basis_000,phi_cps)
-        dx = scaling[0]*csdl.matvec(basis_100,phi_cps)
-        dy = scaling[1]*csdl.matvec(basis_010,phi_cps)
-        dxx = scaling[0]*scaling[0]*csdl.matvec(basis_200,phi_cps)
-        dxy = scaling[0]*scaling[1]*csdl.matvec(basis_110,phi_cps)
-        dyy = scaling[1]*scaling[1]*csdl.matvec(basis_020,phi_cps)
+        phi_surf = bbox_diag*csdl.matvec(basis_000,phi_cps)
+        dx  = bbox_diag*scaling[0]*csdl.matvec(basis_100,phi_cps)
+        dy  = bbox_diag*scaling[1]*csdl.matvec(basis_010,phi_cps)
+        dxx = bbox_diag*bbox_diag*scaling[0]*scaling[0]*csdl.matvec(basis_200,phi_cps)
+        dxy = bbox_diag*bbox_diag*scaling[0]*scaling[1]*csdl.matvec(basis_110,phi_cps)
+        dyy = bbox_diag*bbox_diag*scaling[1]*scaling[1]*csdl.matvec(basis_020,phi_cps)
         if dim == 3:
-            dz = scaling[2]*csdl.matvec(basis_001,phi_cps)
-            dxz = scaling[0]*scaling[2]*csdl.matvec(basis_101,phi_cps)
-            dyz = scaling[1]*scaling[2]*csdl.matvec(basis_011,phi_cps)
-            dzz = scaling[2]*scaling[2]*csdl.matvec(basis_002,phi_cps)
+            dz  = bbox_diag*scaling[2]*csdl.matvec(basis_001,phi_cps)
+            dxz = bbox_diag*bbox_diag*scaling[0]*scaling[2]*csdl.matvec(basis_101,phi_cps)
+            dyz = bbox_diag*bbox_diag*scaling[1]*scaling[2]*csdl.matvec(basis_011,phi_cps)
+            dzz = bbox_diag*bbox_diag*scaling[2]*scaling[2]*csdl.matvec(basis_002,phi_cps)
         # CSDL reshaping at its finest
-        nx = normals[:,0]/bbox_diag
-        ny = normals[:,1]/bbox_diag
+        nx = normals[:,0]
+        ny = normals[:,1]
         if dim == 3:
-            nz = normals[:,2]/bbox_diag
+            nz = normals[:,2]
         # Assembling energy terms
-        Ep = 1/N_gamma * csdl.sum(phi_surf**2)
+        Ep = 1/N_gamma * csdl.sum((phi_surf)**2)
         if dim == 2:
             En = 1/N_gamma * csdl.sum( ((dx+nx)**2 + (dy+ny)**2) )
-            Er = dq/N * csdl.sum( dxx**2 + 2*dxy**2 + dyy**2)
+            Er = 1/N * csdl.sum( dxx**2 + 2*dxy**2 + dyy**2)
         if dim == 3:
             En = 1/N_gamma * csdl.sum( ((dx+nx)**2 + (dy+ny)**2 + (dz+nz)**2) )
-            Er = dq/N * csdl.sum( dxx**2 + 2*dxy**2 + dyy**2 + 2*dxz**2 + 2*dyz**2 + dzz**2)
+            Er = 1/N * csdl.sum( dxx**2 + 2*dxy**2 + dyy**2 + 2*dxz**2 + 2*dyz**2 + dzz**2)
         # Optional Printing
         self.register_output("Ep",Ep)
         self.register_output("En",En)
@@ -106,7 +105,7 @@ if __name__ == '__main__':
     Ln = 1e2
     Lr = 1e-2
 
-    dq=0.812571
+    Er_normalizer=0.812571
 
     def gen_sp_matrix(*args):
         rand_matrix = np.random.rand(*args)
@@ -133,7 +132,6 @@ if __name__ == '__main__':
         normals=normals,
         bbox_diag=bbox_diag,
         verbose=False,
-        dq=dq,
     ))
     sim['phi_cps'] = np.random.rand(num_cps)
     sim.run()

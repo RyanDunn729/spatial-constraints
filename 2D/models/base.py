@@ -222,6 +222,16 @@ class MyProblem(object):
         basis = self.Surface.get_basis_matrix(u,v,0,0)
         phi = basis.dot(self.cps[:,2])
         return phi
+    
+    def gradient_eval_surface(self):
+        dxy = np.diff(self.dimensions).flatten()
+        scaling = 1/dxy
+        u,v = self.spatial_to_parametric(self.surf_pts)
+        bdx = self.Surface.get_basis_matrix(u,v,1,0)
+        dpdx = bdx.dot(self.cps[:,2])*scaling[0]
+        bdy = self.Surface.get_basis_matrix(u,v,0,1)
+        dpdy = bdy.dot(self.cps[:,2])*scaling[1]
+        return dpdx, dpdy
 
     def check_local_RMS_error(self,bbox_perc,res):
         ep_max = bbox_perc*self.Bbox_diag / 100

@@ -74,7 +74,7 @@ class MyProblem(object):
         print('BBox diagonal: ',self.Bbox_diag,'\n')
         print('Num_surf_pts: ', len(surf_pts))
         print('num_cps: ',num_cps,'=',self.num_cps_pts)
-        print('num_hess: ',num_hess,'=',self.num_hess_pts,'\n')
+        print('num_hess: ',self.num_hess_pts,'\n')
         print('phi0_min: ',np.min(self.cps[:,3]))
         print('phi0_max: ',np.max(self.cps[:,3]),'\n')
         print('Order: ',order,'\n')
@@ -167,11 +167,11 @@ class MyProblem(object):
         scaling = 1/dxyz
         u,v,w = self.spatial_to_parametric(pts)
         bdx = self.Volume.get_basis_matrix(u,v,w,1,0,0)
-        dpdx = bdx.dot(self.cps[:,2])*scaling[0]
+        dpdx = bdx.dot(self.cps[:,3])*scaling[0]
         bdy = self.Volume.get_basis_matrix(u,v,w,0,1,0)
-        dpdy = bdy.dot(self.cps[:,2])*scaling[1]        
+        dpdy = bdy.dot(self.cps[:,3])*scaling[1]        
         bdz = self.Volume.get_basis_matrix(u,v,w,0,0,1)
-        dpdz = bdz.dot(self.cps[:,2])*scaling[2]
+        dpdz = bdz.dot(self.cps[:,3])*scaling[2]
         return dpdx, dpdy, dpdz
 
     def eval_surface(self):
@@ -184,11 +184,11 @@ class MyProblem(object):
         scaling = 1/dxyz
         u,v,w = self.spatial_to_parametric(self.surf_pts)
         bdx = self.Volume.get_basis_matrix(u,v,w,1,0,0)
-        dpdx = bdx.dot(self.cps[:,2])*scaling[0]
+        dpdx = bdx.dot(self.cps[:,3])*scaling[0]
         bdy = self.Volume.get_basis_matrix(u,v,w,0,1,0)
-        dpdy = bdy.dot(self.cps[:,2])*scaling[1] 
+        dpdy = bdy.dot(self.cps[:,3])*scaling[1] 
         bdz = self.Volume.get_basis_matrix(u,v,w,0,0,1)
-        dpdz = bdz.dot(self.cps[:,2])*scaling[2]
+        dpdz = bdz.dot(self.cps[:,3])*scaling[2]
         return dpdx, dpdy, dpdz
 
     def check_local_RMS_error(self,bbox_perc,res,num_samp=None):

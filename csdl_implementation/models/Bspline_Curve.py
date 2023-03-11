@@ -1,15 +1,12 @@
 import numpy as np
 import scipy.sparse as sps
 
-class BSplineSurface:
-    def __init__(self, name, order_u, order_v, knots_u, knots_v, shape):
+class BSplineCurve:
+    def __init__(self, name, order_u, knots_u, shape):
         self.name = name
         self.order_u = order_u
-        self.order_v = order_v
         self.knots_u = knots_u
-        self.knots_v = knots_v
         self.shape_u = int(shape[0])
-        self.shape_v = int(shape[1])
         self.num_control_points = int(np.product(shape))
     
     def std_uniform_knot_vec(self,num_cps,order):
@@ -18,13 +15,13 @@ class BSplineSurface:
             knot_vector[i] = (i - order + 1) / (num_cps - order + 1)
         return knot_vector
 
-    def get_basis_matrix(self, u_vec, v_vec, du, dv):
-        data = np.zeros(len(u_vec) * self.order_u * self.order_v)
+    def get_basis_matrix(self, u_vec, du):
+        data = np.zeros(len(u_vec) * self.order_u)
         row_indices = np.zeros(len(data), np.int32)
         col_indices = np.zeros(len(data), np.int32)
 
         data, row_indices, col_indices = self.get_basis_surface_matrix(
-            du, dv, u_vec, v_vec,
+            du, u_vec,
             data, row_indices, col_indices
             )
             
@@ -32,7 +29,7 @@ class BSplineSurface:
         
         return basis
         
-    def get_basis_surface_matrix(self, du, dv, u_vec, v_vec, data, row_indices, col_indices):        
+    def get_basis_surface_matrix(self, du, u_vec, data, row_indices, col_indices):        
         i_nz = 0
         
         if du == 0:
@@ -41,26 +38,17 @@ class BSplineSurface:
             get_basis_u = self.get_basis1
         elif du == 2:
             get_basis_u = self.get_basis2
-
-        if dv == 0:
-            get_basis_v = self.get_basis0
-        elif dv == 1:
-            get_basis_v = self.get_basis1
-        elif dv == 2:
-            get_basis_v = self.get_basis2
         
         for i_pt in range(len(u_vec)):
             
             i_start_u, basis_u = get_basis_u(self.order_u, self.shape_u, u_vec[i_pt], self.knots_u)
-            i_start_v, basis_v = get_basis_v(self.order_v, self.shape_v, v_vec[i_pt], self.knots_v)
             
             for i_order_u in range(self.order_u):
-                for i_order_v in range(self.order_v):
-                    data[i_nz] = basis_u[i_order_u] * basis_v[i_order_v]
-                    row_indices[i_nz] = i_pt
-                    col_indices[i_nz] = self.shape_v * (i_start_u + i_order_u) + (i_start_v + i_order_v)
+                data[i_nz] = basis_u[i_order_u]
+                row_indices[i_nz] = i_pt
+                col_indices[i_nz] = i_start_u + i_order_u
 
-                    i_nz += 1
+                i_nz += 1
                     
         return data, row_indices, col_indices
     
@@ -229,33 +217,36 @@ if __name__ == '__main__':
             knot_vector[i] = (i - order + 1) / (num_cps - order + 1)
         return knot_vector
     
+    np.random.seed(1)
+
     order = 4
-    num_cps = [100,30]
+    num_cps = [25,]
     
     kv_u = std_uniform_knot_vec(num_cps[0],order)
-    kv_v = std_uniform_knot_vec(num_cps[1],order)
     
-    cps = np.zeros((np.product(num_cps), 3))
-    cps[:, 0] = np.einsum('i,j->ij', np.linspace(0,1,num_cps[0]), np.ones(num_cps[1])).flatten()
-    cps[:, 1] = np.einsum('i,j->ij', np.ones(num_cps[0]), np.linspace(0,1,num_cps[1])).flatten()
-    cps[:, 2] = np.random.rand(np.product(num_cps))
+    x = np.linspace(0,4*np.pi,np.product(num_cps))
+    domain_size_x = x.max()-x.min()
+    phi = np.cos(x) 
+
+    cps = np.zeros((np.product(num_cps), 2))
+    cps[:, 0] = np.linspace(0,1,num_cps[0])
+    cps[:, 1] = phi
+     
+    Surface = BSplineCurve('name',order,kv_u,num_cps)
     
-    Surface = BSplineSurface('name',order,order,kv_u,kv_v,num_cps)
+    num_pts = 1000
+    u_vec = np.linspace(0,1,num_pts)
+    basis = Surface.get_basis_matrix(u_vec,0)
+    p = basis.dot(cps[:,1])
+    basis = Surface.get_basis_matrix(u_vec,1)
+    dx = basis.dot(cps[:,1])/domain_size_x
+    basis = Surface.get_basis_matrix(u_vec,2)
+    dxx = basis.dot(cps[:,1])/domain_size_x/domain_size_x
     
-    res = 15
-    time_set = np.zeros(res)
-    time_data = np.logspace(1,5,res,dtype=int)
-    for i,num_pts in enumerate(time_data):
-        u_vec = np.linspace(0,1,num_pts)
-        v_vec = np.linspace(0,1,num_pts)
-        t1 = time.perf_counter()
-        basis = Surface.get_basis_matrix(u_vec,v_vec,0,0)
-        p = basis.dot(cps[:,2])
-        t2 = time.perf_counter()
-        time_set[i] = t2-t1
-        print(num_pts,t2-t1)
-    
-    plt.loglog(time_data,time_set)
+    plt.plot(cps[:,0],cps[:,1],'r.',label='control points')
+    plt.plot(u_vec,p,label='y')
+    plt.plot(u_vec,dx,label='dydx')
+    plt.plot(u_vec,dxx,label='d2ydx2')
+    plt.legend()
     plt.show()
-    print(t2-t1)
     

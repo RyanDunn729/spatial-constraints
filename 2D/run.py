@@ -22,7 +22,7 @@ max_cps = 72
 
 Lp = 1e3
 Ln = 10.
-Lr = 1e1
+Lr = 1e-2
 
 tol = 1e-4
 
@@ -35,19 +35,19 @@ prev_filename = None
 ######### Sample Surface #########
 num_surf_pts = 76
 
-# a = 5
-# b = 7
-# e = rectangle(a,b)
-# custom_dimensions = np.array([
-#     [-4.,4.],
-#     [-5.6,5.6]])
-
-centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
-radii = [2.,2.,4.,3.]
-e = multi_circle(centers,radii)
+a = 5
+b = 7
+e = rectangle(a,b)
 custom_dimensions = np.array([
-    [-18.,18.],
-    [-9,6]])
+    [-4.,4.],
+    [-5.6,5.6]])
+
+# centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
+# radii = [2.,2.,4.,3.]
+# e = multi_circle(centers,radii)
+# custom_dimensions = np.array([
+#     [-18.,18.],
+#     [-9,6]])
 
 num_exact = 10000
 pts = e.points(num_surf_pts)
@@ -93,7 +93,8 @@ EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
         num_pts=num_hess_pts,
         dim=dim,
         scaling=scaling,
-        bases=bases_curv
+        bases=bases_curv,
+        bbox_diag=Func.Bbox_diag,
     ),promotes=['*'])
 EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
         num_cps=num_cps_pts,
@@ -101,6 +102,7 @@ EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
         dim=dim,
         scaling=scaling,
         bases=bases_surf,
+        bbox_diag=Func.Bbox_diag,
     ),promotes=['*'])
 EnergyMinModel.add_subsystem('Fnorms',Fnorm(
         num_pts=num_hess_pts,
@@ -114,7 +116,6 @@ EnergyMinModel.add_subsystem('Objective',Objective(
         Ln=Ln,
         Lr=Lr,
         normals=normals,
-        bbox_diag=Func.Bbox_diag,
         verbose=True,
     ),promotes=['*'])
 #################################

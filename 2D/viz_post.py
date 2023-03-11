@@ -4,10 +4,9 @@ import seaborn as sns
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.patches as patches
+from scipy.spatial import KDTree
 
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+from utils.Hicken_Kaur import Hicken_eval
 
 def set_fonts():
     from matplotlib import rc
@@ -20,11 +19,22 @@ set_fonts()
 
 Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 
+print('dimensions: ',Func.dimensions)
+print('Bbox_diag: ',Func.Bbox_diag)
+spacing = np.max(np.diff(Func.cps[:,0:2],axis=0),axis=0)/Func.Bbox_diag
+print('Control Point spacing:\n',spacing,'=',np.linalg.norm(spacing))
+num_surf_pts = Func.num_surf_pts
+num_cps_pts  = Func.num_cps_pts
+num_hess_pts = Func.num_hess_pts
+print('Num_hess_pts: ', num_hess_pts)
+print('num_cps: ',Func.num_cps,'=',np.product(Func.num_cps))
+print('Num_surf_pts: ', num_surf_pts,'\n')
+
 x = Func.dimensions[0]
 y = Func.dimensions[1]
 phi_cps = Func.cps[:,2]
 
-fig1 = plt.figure(figsize=(7,5),dpi=140)
+fig1 = plt.figure()
 ax = plt.axes()
 res = 1000
 uu,vv = np.meshgrid(np.linspace(0,1,res),
@@ -43,8 +53,9 @@ ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_xticks(np.arange(-10,5,1))
 ax.set_yticks(np.arange(-10,10,1))
-ax.set_xlim(Func.dimensions[0,0], Func.dimensions[0,1])
-ax.set_ylim(Func.dimensions[1,0], Func.dimensions[1,1])
+# ax.set_xlim(Func.dimensions[0,0], Func.dimensions[0,1])
+# ax.set_ylim(Func.dimensions[1,0], Func.dimensions[1,1])
+ax.axis('equal')
 sns.despine()
 ax.legend(framealpha=1,edgecolor='black',facecolor='white')
 
@@ -81,20 +92,32 @@ ax.set_zlim(-5,5)
 sns.set_style('ticks')
 set_fonts()
 
+
+dataset=KDTree(Func.surf_pts)
+normals=Func.normals
+k=10
+rho=10
 plt.figure()
 ax = plt.axes()
 res = 200
 ones = np.ones(res)
 diag = np.linspace(0,1,res)
 basis = Func.Surface.get_basis_matrix(diag, 0.5*ones, 0, 0)
-phi = basis.dot(phi_cps)
-ax.plot(diag, phi, '-', label='X-axis')
+pts = basis.dot(Func.cps[:,2])
+ax.plot(diag, pts, '-', color='C1', label='X-axis')
+xyz = basis.dot(Func.cps[:,0:2])
+sdf = Hicken_eval(xyz,dataset,normals,k,rho)
+ax.plot(diag, sdf, '--', color='C1')
 basis = Func.Surface.get_basis_matrix(0.5*ones, diag, 0, 0)
-phi = basis.dot(phi_cps)
-ax.plot(diag, phi, '-', label='Y-axis')
-ax.axis([0,1,-8,8])
+pts = basis.dot(Func.cps[:,2])
+ax.plot(diag, pts, '-', color='C2', label='Y-axis')
+xyz = basis.dot(Func.cps[:,0:2])
+sdf = Hicken_eval(xyz,dataset,normals,k,rho)
+ax.plot(diag, sdf, '--', color='C2')
+ax.axis([0,1,np.min(Func.cps[:,2]),np.max(Func.cps[:,2])])
 ax.set_xticks([0,0.5,1])
-ax.set_yticks([-5,0,5])
+ax.set_yticks([np.min(Func.cps[:,2]),0,np.max(Func.cps[:,2])])
+ax.set_ylim(np.min(Func.cps[:,2]),np.max(Func.cps[:,2]))
 ax.set_xlabel('Normalized Location')
 ax.set_ylabel('Phi')
 ax.set_title('Phi along 1D slices')
@@ -121,6 +144,10 @@ bbox_max = 5
 phi = Func.eval_surface()
 MAX_surf = np.max(abs(phi))/Func.Bbox_diag
 RMS_surf = np.sqrt(np.sum(phi**2)/len(phi))/Func.Bbox_diag
+
+dx,dy = Func.gradient_eval_surface()
+nx,ny = Func.normals[:,0],Func.normals[:,1]
+print("avg gradient error: ",np.mean( (dx+nx)**2 + (dy+ny)**2))
 
 # print('RMS Local 1%:',RMS_local)
 print('MAX surf:',MAX_surf)

@@ -161,11 +161,35 @@ class MyProblem(object):
         u,v,w = self.spatial_to_parametric(pts)
         b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
         return b.dot(self.cps[:,3])
+    
+    def gradient_eval(self,pts):
+        dxyz = np.diff(self.dimensions).flatten()
+        scaling = 1/dxyz
+        u,v,w = self.spatial_to_parametric(pts)
+        bdx = self.Volume.get_basis_matrix(u,v,w,1,0,0)
+        dpdx = bdx.dot(self.cps[:,3])*scaling[0]
+        bdy = self.Volume.get_basis_matrix(u,v,w,0,1,0)
+        dpdy = bdy.dot(self.cps[:,3])*scaling[1]        
+        bdz = self.Volume.get_basis_matrix(u,v,w,0,0,1)
+        dpdz = bdz.dot(self.cps[:,3])*scaling[2]
+        return dpdx, dpdy, dpdz
 
     def eval_surface(self):
         u,v,w = self.spatial_to_parametric(self.exact[0])
         b = self.Volume.get_basis_matrix(u,v,w,0,0,0)
         return b.dot(self.cps[:,3])
+
+    def gradient_eval_surface(self):
+        dxyz = np.diff(self.dimensions).flatten()
+        scaling = 1/dxyz
+        u,v,w = self.spatial_to_parametric(self.surf_pts)
+        bdx = self.Volume.get_basis_matrix(u,v,w,1,0,0)
+        dpdx = bdx.dot(self.cps[:,3])*scaling[0]
+        bdy = self.Volume.get_basis_matrix(u,v,w,0,1,0)
+        dpdy = bdy.dot(self.cps[:,3])*scaling[1] 
+        bdz = self.Volume.get_basis_matrix(u,v,w,0,0,1)
+        dpdz = bdz.dot(self.cps[:,3])*scaling[2]
+        return dpdx, dpdy, dpdz
 
     def check_local_RMS_error(self,bbox_perc,res,num_samp=None):
         if num_samp is None:

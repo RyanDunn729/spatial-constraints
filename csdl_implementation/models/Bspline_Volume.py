@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as sps
 
 class BSplineVolume:
-    def __init__(self, name, order_u, order_v, order_w, knots_u, knots_v, knots_w, shape, control_points):
+    def __init__(self, name, order_u, order_v, order_w, knots_u, knots_v, knots_w, shape):
         self.name = name
         self.order_u = order_u
         self.order_v = order_v
@@ -14,7 +14,6 @@ class BSplineVolume:
         self.shape_v = int(shape[1])
         self.shape_w = int(shape[2])
         self.num_control_points = int(np.product(shape))
-        self.control_points = control_points
         
     def get_basis_matrix(self, u_vec, v_vec, w_vec, du, dv, dw):
         data = np.zeros(len(u_vec) * self.order_u * self.order_v * self.order_w)
@@ -251,7 +250,7 @@ if __name__ == '__main__':
         kv_u = std_uniform_knot_vec(num_cps[0],order)
         kv_v = std_uniform_knot_vec(num_cps[1],order)
         kv_w = std_uniform_knot_vec(num_cps[2],order)
-        BSpline = BSplineVolume('name',order,order,order,kv_u,kv_v,kv_w,num_cps,cps)
+        BSpline = BSplineVolume('name',order,order,order,kv_u,kv_v,kv_w,num_cps)
         
         time_set = np.zeros(res)
         for i,i_num_pts in enumerate(num_pts):

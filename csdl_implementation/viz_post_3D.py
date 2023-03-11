@@ -6,7 +6,7 @@ import seaborn as sns
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from stl.mesh import Mesh
 from scipy.spatial import KDTree
-from utils.Hicken_Kaur import KS_eval
+from utils.Hicken_Kaur import Hicken_eval
 
 def set_fonts():
     from matplotlib import rc
@@ -45,16 +45,29 @@ Func = pickle.load( open( "_Saved_Function.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Wing_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Battery_.pkl", "rb" ) )
 # Func = pickle.load( open( "SAVED_DATA/Opt_Heart_.pkl", "rb" ) )
-print('num_cps: ',Func.num_cps)
-print(np.product(Func.num_cps))
 print('dimensions: ',Func.dimensions)
 print('Bbox_diag: ',Func.Bbox_diag)
+spacing = np.max(np.diff(Func.cps[:,0:3],axis=0),axis=0)/Func.Bbox_diag
+print('Control Point spacing:\n',spacing,'=',np.linalg.norm(spacing))
 
 ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
 print('epsilon error: ',np.mean(data))
-print('num_surf_pts: ',len(Func.surf_pts))
+num_surf_pts = Func.num_surf_pts
+num_cps_pts  = Func.num_cps_pts
+num_hess_pts = Func.num_hess_pts
+print('Num_hess_pts: ', num_hess_pts)
+print('num_cps: ',Func.num_cps,'=',np.product(Func.num_cps))
+print('Num_surf_pts: ', num_surf_pts,'\n')
+
+print('phi_min: ',np.min(Func.cps[:,3]))
+print('phi_max: ',np.max(Func.cps[:,3]),'\n')
 
 gold = (198/255, 146/255, 20/255)
+
+dataset=KDTree(Func.surf_pts)
+normals=Func.normals
+k=10
+rho=10
 
 plt.figure(figsize=size,dpi=dpi)
 ax = plt.axes()
@@ -63,18 +76,26 @@ ones = np.ones(res)
 diag = np.linspace(0,1,res)
 basis = Func.Volume.get_basis_matrix(diag, 0.5*ones, 0.5*ones, 0, 0, 0)
 pts = basis.dot(Func.cps[:,3])
-ax.plot(diag, pts, '-', label='X-axis')
+xyz = basis.dot(Func.cps[:,0:3])
+sdf = Hicken_eval(xyz,dataset,normals,k,rho)
+ax.plot(xyz[:,0], pts, '-', color='C1', label='X-axis')
+ax.plot(xyz[:,0], sdf, '--', color='C1')
 basis = Func.Volume.get_basis_matrix(0.5*ones, diag, 0.5*ones, 0, 0, 0)
 pts = basis.dot(Func.cps[:,3])
-ax.plot(diag, pts, '-', label='Y-axis')
+xyz = basis.dot(Func.cps[:,0:3])
+sdf = Hicken_eval(xyz,dataset,normals,k,rho)
+ax.plot(xyz[:,1], pts, '-', color='C2', label='Y-axis')
+ax.plot(xyz[:,1], sdf, '--', color='C2')
 basis = Func.Volume.get_basis_matrix(0.5*ones, 0.5*ones, diag, 0, 0, 0)
 pts = basis.dot(Func.cps[:,3])
-ax.plot(diag, pts, '-', label='Z-axis')
-ax.axis([0,1,np.min(Func.cps[:,3]),np.max(Func.cps[:,3])])
-ax.set_xticks([0,0.5,1])
-ax.set_yticks([np.min(Func.cps[:,3]),0,np.max(Func.cps[:,3])])
-ax.set_ylim(1.25*np.min(Func.cps[:,3]),1.25*np.max(Func.cps[:,3]))
-ax.set_xlabel('Normalized Location')
+xyz = basis.dot(Func.cps[:,0:3])
+sdf = Hicken_eval(xyz,dataset,normals,k,rho)
+ax.plot(xyz[:,2], pts, '-', color='C3', label='Z-axis')
+ax.plot(xyz[:,2], sdf, '--', color='C3')
+# ax.axis([0,1,np.min(Func.cps[:,3]),np.max(Func.cps[:,3])])
+# ax.set_xticks([0,0.5,1])
+# ax.set_yticks([np.min(Func.cps[:,3]),0,np.max(Func.cps[:,3])])
+ax.set_xlabel('Location')
 ax.set_ylabel('Phi')
 ax.set_title('Phi along 1D slices')
 ax.legend()
@@ -183,21 +204,18 @@ if save_mesh:
     print('Number of Verices: ',len(verts))
 
 dx,dy,dz = Func.gradient_eval_surface()
-print("normal vec error: ",np.mean(Func.normals+np.stack((dx,dy,dz),axis=1)))
-print("normal vec error: ",np.mean(Func.normals-np.stack((dx,dy,dz),axis=1)))
+nx,ny,nz = Func.normals[:,0],Func.normals[:,1],Func.normals[:,2]
+print("avg gradient error: ",np.mean( (dx+nx)**2 + (dy+ny)**2 + (dz+nz)**2))
 
-spacing = np.max(np.diff(Func.cps[:,0:3],axis=0),axis=0)/Func.Bbox_diag
-print('Control Point spacing:\n',spacing)
-print(np.linalg.norm(spacing))
 phi = Func.eval_surface()
+print('Surface error (units): \n',
+        'Max: ',np.max(abs(phi)),'\n',
+        'RMS: ',np.sqrt(np.mean(phi**2)))
 phi = phi/Func.Bbox_diag
-print('Surface error (relative): \n',
-        'Max: ',np.max(phi),'\n',
+print('Surface error (rel): \n',
+        'Max: ',np.max(abs(phi)),'\n',
         'RMS: ',np.sqrt(np.sum(phi**2)/len(phi)))
 print('Diagonal: ',Func.Bbox_diag)
-print('Surface error (units): \n',
-        'Max: ',Func.Bbox_diag*np.max(phi),'\n',
-        'RMS: ',Func.Bbox_diag*np.sqrt(np.sum(phi**2)/len(phi)))
 print("Runtime: ", Func.runtime)
 print("Diagonal: ", Func.Bbox_diag)
 plt.show()

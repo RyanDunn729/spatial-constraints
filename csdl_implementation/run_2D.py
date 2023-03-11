@@ -112,7 +112,6 @@ model.add(EnergyMinProblem(
     normals=normals,
     bbox_diag=float(Func.Bbox_diag),
     verbose=True,
-    dq=float(1/num_hess_pts),
 ))
 model.add_design_variable("phi_cps", lower=-1, upper=1)
 model.add_objective("objective", scaler=1)
