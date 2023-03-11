@@ -191,16 +191,9 @@ class MyProblem(object):
         ax.legend()
         return
 
-    def get_bases(self):
-        surf_00 = self.Surface.get_basis_matrix(self.u['surf'],self.v['surf'],0,0)
-        surf_10 = self.Surface.get_basis_matrix(self.u['surf'],self.v['surf'],1,0)
-        surf_01 = self.Surface.get_basis_matrix(self.u['surf'],self.v['surf'],0,1)
-        bases_surf = np.stack((surf_00,surf_10,surf_01))
-        hess_20 = self.Surface.get_basis_matrix(self.u['hess'],self.v['hess'],2,0)
-        hess_11 = self.Surface.get_basis_matrix(self.u['hess'],self.v['hess'],1,1)
-        hess_02 = self.Surface.get_basis_matrix(self.u['hess'],self.v['hess'],0,2)
-        bases_curv = np.stack((hess_20,hess_11,hess_02))
-        return bases_surf, bases_curv
+    def get_basis(self,loc='surf',du=0,dv=0):
+        basis = self.Surface.get_basis_matrix(self.u[loc],self.v[loc],du,dv)
+        return basis
 
     def eval_pts(self,pts):
         u,v = self.spatial_to_parametric(pts)

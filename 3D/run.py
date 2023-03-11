@@ -138,7 +138,7 @@ else:
 
 ######### Initialize Volume #########
 Func = MyProblem(surf_pts, normals, max_cps, border, order, exact=exact)
-scaling, bases_surf, bases_curv = Func.get_values()
+scaling = Func.scaling
 phi_init = Func.cps[:,3]
 # Key vector sizes
 num_cps_pts  = Func.num_cps_pts
@@ -152,6 +152,21 @@ if visualize_init:
     Func.visualize_current(res=30)
     plt.show()
     exit()
+#################################
+bases_surf = [
+    Func.get_basis(loc='surf',du=0,dv=0,dw=0),
+    Func.get_basis(loc='surf',du=1,dv=0,dw=0),
+    Func.get_basis(loc='surf',du=0,dv=1,dw=0),
+    Func.get_basis(loc='surf',du=0,dv=0,dw=1),
+]
+bases_curv = [
+    Func.get_basis(loc='hess',du=2,dv=0,dw=0),
+    Func.get_basis(loc='hess',du=0,dv=2,dw=0),
+    Func.get_basis(loc='hess',du=1,dv=1,dw=0),
+    Func.get_basis(loc='hess',du=0,dv=1,dw=1),
+    Func.get_basis(loc='hess',du=1,dv=0,dw=1),
+    Func.get_basis(loc='hess',du=0,dv=0,dw=2),
+]
 #################################
 basis_200 = Func.get_basis('hess',du=2,dv=0,dw=0)
 basis_110 = Func.get_basis('hess',du=1,dv=1,dw=0)

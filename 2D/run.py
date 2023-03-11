@@ -72,8 +72,8 @@ for i,ratio in enumerate(frac):
 
 ######### Initialize Volume #########
 Func = MyProblem(pts, normals, num_cps, order, custom_dimensions, exact=exact)
-scaling, bases_surf, bases_curv = Func.get_values()
-
+scaling = Func.scaling
+phi_init = Func.cps[:,2]
 # Key vector sizes
 num_cps_pts  = Func.num_cps_pts
 num_hess_pts = Func.num_hess_pts
@@ -81,11 +81,25 @@ num_surf_pts = Func.num_surf_pts
 print('Num_hess_pts: ', num_hess_pts)
 print('Num_ctrl_pts: ', num_cps_pts)
 print('Num_surf_pts: ', num_surf_pts,'\n')
-
 if visualize_init:
-    Func.visualize_current()
+    Func.visualize_current(res=30)
     plt.show()
     exit()
+#################################
+bases_surf = [
+    Func.get_basis(loc='surf',du=0,dv=0),
+    Func.get_basis(loc='surf',du=1,dv=0),
+    Func.get_basis(loc='surf',du=0,dv=1),
+    Func.get_basis(loc='surf',du=0,dv=0),
+]
+bases_curv = [
+    Func.get_basis(loc='hess',du=2,dv=0),
+    Func.get_basis(loc='hess',du=0,dv=2),
+    Func.get_basis(loc='hess',du=1,dv=1),
+    Func.get_basis(loc='hess',du=0,dv=1),
+    Func.get_basis(loc='hess',du=1,dv=0),
+    Func.get_basis(loc='hess',du=0,dv=0),
+]
 #################################
 EnergyMinModel = om.Group()
 EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(

@@ -60,11 +60,9 @@ print(mode)
 
 # BSpline Volume Parameters #
 dim = 3
-R = 1
 order = int(file[1])
 border = 0.15
 max_cps = int(file[-2:])
-soft_const = True # Depricated
 iter = 1
 # Curvature, normals, level set
 L = [1e-1, 10., 1000.]
@@ -135,7 +133,7 @@ if mode=='Hicken_analysis':
 
 if mode=='Bspline_analysis':
     # pt_data = [pt_data[group-1], pt_data[-group]]
-    m = model(max_cps,R,border,dim,tol,exact,soft_const)
+    m = model(max_cps,border,dim,tol,exact)
     for num_pts in pt_data:
         if file[2:-2] =='Ellipsoid':
             surf_pts = e.points(num_pts)
@@ -153,7 +151,7 @@ if mode == 'Bspline_analysis_vary_L1':
     print(L1_data)
     L2 = L[1]
     L3 = L[2]
-    m = model(max_cps,R,border,dim,tol,exact,soft_const)
+    m = model(max_cps,border,dim,tol,exact)
     surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
     for i,L1 in enumerate(L1_data):
         if i<6:
@@ -169,7 +167,7 @@ if mode == 'Bspline_analysis_vary_L2':
     L2_data = L[1]*data
     print(L2_data)
     L3 = L[2]
-    m = model(max_cps,R,border,dim,tol,exact,soft_const)
+    m = model(max_cps,border,dim,tol,exact)
     surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
     for i,L2 in enumerate(L2_data):
         Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
@@ -183,7 +181,7 @@ if mode == 'Bspline_analysis_vary_L3':
     L2 = L[1]
     L3_data = L[2]*data
     print(L3_data)
-    m = model(max_cps,R,border,dim,tol,exact,soft_const)
+    m = model(max_cps,border,dim,tol,exact)
     surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
     for i,L3 in enumerate(L3_data):
         Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)

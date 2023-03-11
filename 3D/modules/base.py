@@ -79,10 +79,6 @@ class MyProblem(object):
         print('phi0_max: ',np.max(self.cps[:,3]),'\n')
         print('Order: ',order,'\n')
 
-    def get_values(self):
-        surf, curv = self.get_bases()
-        return self.scaling, surf, curv
-
     def set_cps(self, cps_phi):
         self.cps[:,3] = cps_phi
         self.Volume.control_points = self.cps
@@ -99,21 +95,6 @@ class MyProblem(object):
         for i in range(num_cps + order):
             knot_vector[i] = (i - order + 1) / (num_cps - order + 1)
         return knot_vector
-
-    def get_bases(self):
-        surf_000   = self.Volume.get_basis_matrix(self.u['surf'],self.v['surf'],self.w['surf'],0,0,0)
-        surf_100   = self.Volume.get_basis_matrix(self.u['surf'],self.v['surf'],self.w['surf'],1,0,0)
-        surf_010   = self.Volume.get_basis_matrix(self.u['surf'],self.v['surf'],self.w['surf'],0,1,0)
-        surf_001   = self.Volume.get_basis_matrix(self.u['surf'],self.v['surf'],self.w['surf'],0,0,1)
-        bases_surf = np.stack((surf_000,surf_100,surf_010,surf_001))
-        hess_200  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],2,0,0)
-        hess_020  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,2,0)
-        hess_110  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],1,1,0)
-        hess_011  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,1,1)
-        hess_101  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],1,0,1)
-        hess_002  = self.Volume.get_basis_matrix(self.u['hess'],self.v['hess'],self.w['hess'],0,0,2)
-        bases_curv = np.stack((hess_200,hess_110,hess_020,hess_101,hess_011,hess_002))
-        return bases_surf, bases_curv
 
     def init_cps_Hicken(self,k=10,rho=10):
         rangex = self.dimensions[0]

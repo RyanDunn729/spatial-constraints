@@ -6,20 +6,17 @@ from modules.fnorm import Fnorm
 from modules.base import MyProblem
 from stl.mesh import Mesh
 import openmdao.api as om
-import omtools.api as ot
 import numpy as np
 import time
 
 class model(object):
 
-    def __init__(self,max_cps,R,border,dim,tol,exact,soft_const):
+    def __init__(self,max_cps,border,dim,tol,exact):
         self.max_cps = max_cps
-        self.R = R
         self.border = border
         self.dim = dim
         self.tol = tol
         self.exact = exact
-        self.soft_const = soft_const
 
     def inner_solve(self,surf_pts,normals,Lr,Ln,Lp,order,init_manual=None):
         print('Lr={}'.format(Lr))
@@ -27,7 +24,7 @@ class model(object):
         print('Lp={}'.format(Lp))
         dim = self.dim
         ######### Initialize Volume #########
-        Func = MyProblem(self.exact, surf_pts, normals, self.max_cps, self.R, self.border, order)
+        Func = MyProblem(surf_pts, normals, self.max_cps, self.border, order, exact=self.exact, )
         scaling, bases_surf, bases_curv = Func.get_values()
 
         # Key vector sizes
@@ -42,7 +39,8 @@ class model(object):
                 num_pts=num_hess_pts,
                 dim=dim,
                 scaling=scaling,
-                bases=bases_curv
+                bases=bases_curv,
+                bbox_diag=float(Func.Bbox_diag),
             ),promotes=['*'])
         EnergyMinModel.add_subsystem('Surface_Sampling',surf_sampling(
                 num_cps=num_cps_pts,
@@ -50,6 +48,7 @@ class model(object):
                 dim=dim,
                 scaling=scaling,
                 bases=bases_surf,
+                bbox_diag=float(Func.Bbox_diag),
             ),promotes=['*'])
         EnergyMinModel.add_subsystem('Fnorms',Fnorm(
                 num_pts=num_hess_pts,
@@ -63,7 +62,6 @@ class model(object):
                 Ln=Ln,
                 Lr=Lr,
                 normals=normals,
-                bbox_diag=float(Func.Bbox_diag),
                 verbose=True,
             ),promotes=['*'])
         #################################
