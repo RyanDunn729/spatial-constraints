@@ -1,7 +1,3 @@
-from models.objective import Objective
-from models.surf_samp import surf_sampling
-from models.curv_samp import curv_sampling
-from models.fnorm import Fnorm
 from geom_shapes.multi_circle import multi_circle
 from geom_shapes.multi_obj import multi_obj
 from geom_shapes.rectangle import rectangle
