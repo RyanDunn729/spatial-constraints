@@ -90,15 +90,11 @@ bases_surf = [
     Func.get_basis(loc='surf',du=0,dv=0),
     Func.get_basis(loc='surf',du=1,dv=0),
     Func.get_basis(loc='surf',du=0,dv=1),
-    Func.get_basis(loc='surf',du=0,dv=0),
 ]
 bases_curv = [
     Func.get_basis(loc='hess',du=2,dv=0),
     Func.get_basis(loc='hess',du=0,dv=2),
     Func.get_basis(loc='hess',du=1,dv=1),
-    Func.get_basis(loc='hess',du=0,dv=1),
-    Func.get_basis(loc='hess',du=1,dv=0),
-    Func.get_basis(loc='hess',du=0,dv=0),
 ]
 #################################
 EnergyMinModel = om.Group()
