@@ -43,18 +43,18 @@ file = 'o4Bunny28'
 ### Plot Data Mode ###
 mode = 'Hicken_analysis'
 isocontour = 0
-mode = 'Bspline_analysis'
-# mode = 'Bspline_analysis_vary_L1'
-# mode = 'Bspline_analysis_vary_L2'
-# mode = 'Bspline_analysis_vary_L3'
+# mode = 'Bspline_analysis'
+mode = 'Bspline_analysis_vary_Lr'
+mode = 'Bspline_analysis_vary_Ln'
+# mode = 'Bspline_analysis_vary_Lp'
 # mode = 'Visualize_lambdas_energies'
-mode = 'Visualize_lambdas'
+# mode = 'Visualize_lambdas'
 # mode = 'Plot_data'
 # mode = 'Comp_pen_strict'
 # mode = 'Comp_err_order'
-mode = 'Hicken_v_Splines'
+# mode = 'Hicken_v_Splines'
 # mode = 'normalized_Hicken_v_Splines'
-mode = 'Comp_time'
+# mode = 'Comp_time'
 # mode = 'plot_point_cloud'
 print(mode)
 
@@ -145,190 +145,188 @@ if mode=='Bspline_analysis':
         del surf_pts,normals,Func
         print('Finished ',file,str(num_pts),' Optimization')
 
-if mode == 'Bspline_analysis_vary_L1':
+if mode == 'Bspline_analysis_vary_Lr':
     L = [1., 1., 1.]
-    L1_data = L[0]*data
-    print(L1_data)
-    L2 = L[1]
-    L3 = L[2]
+    Lr_data = L[0]*data
+    print(Lr_data)
+    Ln = L[1]
+    Lp = L[2]
     m = model(max_cps,border,dim,tol,exact)
     surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
-    for i,L1 in enumerate(L1_data):
-        if i<6:
-            continue
-        Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
-        pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_L1_"+str(i)+".pkl","wb"))
+    for i,Lr in enumerate(Lr_data):
+        Func = m.inner_solve(surf_pts, normals, Lr, Ln, Lp, order)
+        pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_Lr_"+str(i)+".pkl","wb"))
         del Func
-        print('Finished L1 =',str(L1),'Optimization')
+        print('Finished Lr =',str(Lr),'Optimization')
 
-if mode == 'Bspline_analysis_vary_L2':
+if mode == 'Bspline_analysis_vary_Ln':
     L = [1., 1., 1.]
-    L1 = L[0]
-    L2_data = L[1]*data
-    print(L2_data)
-    L3 = L[2]
+    Lr = L[0]
+    Ln_data = L[1]*data
+    print(Ln_data)
+    Lp = L[2]
     m = model(max_cps,border,dim,tol,exact)
     surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
-    for i,L2 in enumerate(L2_data):
-        Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
-        pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_L2_"+str(i)+".pkl","wb"))
+    for i,Ln in enumerate(Ln_data):
+        Func = m.inner_solve(surf_pts, normals, Lr, Ln, Lp, order)
+        pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_Ln_"+str(i)+".pkl","wb"))
         del Func
-        print('Finished L2 =',str(L2),'Optimization')
+        print('Finished Ln =',str(Ln),'Optimization')
 
-if mode == 'Bspline_analysis_vary_L3':
+if mode == 'Bspline_analysis_vary_Lp':
     L = [1., 1., 1.]
-    L1 = L[0]
-    L2 = L[1]
-    L3_data = L[2]*data
-    print(L3_data)
+    Lr = L[0]
+    Ln = L[1]
+    Lp_data = L[2]*data
+    print(Lp_data)
     m = model(max_cps,border,dim,tol,exact)
     surf_pts, normals = extract_stl_info('geom_shapes/Bunny_25000.stl')
-    for i,L3 in enumerate(L3_data):
-        Func = m.inner_solve(surf_pts, normals, L1, L2, L3, order)
-        pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_L3_"+str(i)+".pkl","wb"))
+    for i,Lp in enumerate(Lp_data):
+        Func = m.inner_solve(surf_pts, normals, Lr, Ln, Lp, order)
+        pickle.dump(Func, open( "SAVED_DATA/Opt_Bunny_Lp_"+str(i)+".pkl","wb"))
         del Func
-        print('Finished L3 =',str(L3),'Optimization')
+        print('Finished Lp =',str(Lp),'Optimization')
 
 if mode == 'Visualize_lambdas_energies':
-    L1_data = data
-    L2_data = data
-    L3_data = data
-    RMS_surf_L1 = np.ones(len(L1_data))
-    MAX_surf_L1 = np.ones(len(L1_data))
-    RMS_local_L1 = np.ones(len(L1_data))
-    max_Fnorm_L1 = np.ones(len(L1_data))
-    Energy1_L1 = np.ones(len(L1_data))
-    Energy2_L1 = np.ones(len(L1_data))
-    Energy3_L1 = np.ones(len(L1_data))
-    Runtime_L1 = np.ones(len(L1_data))
-    for i,L1 in enumerate(L1_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L1_"+str(i)+".pkl", "rb" ) )
-        Energy1_L1[i] = Func.E_norm[0] # Measurement of the curvature energy
-        Energy2_L1[i] = Func.E_norm[1] # Local energy
-        Energy3_L1[i] = Func.E_norm[2] # Surf energy
+    Lr_data = data
+    Ln_data = data
+    Lp_data = data
+    RMS_surf_Lr = np.ones(len(Lr_data))
+    MAX_surf_Lr = np.ones(len(Lr_data))
+    RMS_local_Lr = np.ones(len(Lr_data))
+    max_Fnorm_Lr = np.ones(len(Lr_data))
+    Energy1_Lr = np.ones(len(Lr_data))
+    Energy2_Lr = np.ones(len(Lr_data))
+    Energy3_Lr = np.ones(len(Lr_data))
+    Runtime_Lr = np.ones(len(Lr_data))
+    for i,Lr in enumerate(Lr_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_Lr_"+str(i)+".pkl", "rb" ) )
+        Energy1_Lr[i] = Func.E_norm[0] # Measurement of the curvature energy
+        Energy2_Lr[i] = Func.E_norm[1] # Local energy
+        Energy3_Lr[i] = Func.E_norm[2] # Surf energy
         ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-        RMS_local_L1[i] = np.mean(data)
+        RMS_local_Lr[i] = np.mean(data)
         phi = Func.eval_surface()
-        MAX_surf_L1[i] = np.max(abs(phi))/Func.Bbox_diag
-        RMS_surf_L1[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        max_Fnorm_L1[i] = Func.get_max_Fnorm()
-        Runtime_L1[i] = Func.runtime
-        print('Finished L1='+str(L1)+' dataset')
-    RMS_surf_L2 = np.ones(len(L2_data))
-    MAX_surf_L2 = np.ones(len(L2_data))
-    RMS_local_L2 = np.ones(len(L2_data))
-    max_Fnorm_L2 = np.ones(len(L2_data))
-    Energy1_L2 = np.ones(len(L2_data))
-    Energy2_L2 = np.ones(len(L2_data))
-    Energy3_L2 = np.ones(len(L2_data))
-    Runtime_L2 = np.ones(len(L2_data))
-    for i,L2 in enumerate(L2_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L2_"+str(i)+".pkl", "rb" ) )
-        Energy1_L2[i] = Func.E_norm[0] # Measurement of the curvature energy
-        Energy2_L2[i] = Func.E_norm[1] # Surf energy
-        Energy3_L2[i] = Func.E_norm[2] # local energy
+        MAX_surf_Lr[i] = np.max(abs(phi))/Func.Bbox_diag
+        RMS_surf_Lr[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+        max_Fnorm_Lr[i] = Func.get_max_Fnorm()
+        Runtime_Lr[i] = Func.runtime
+        print('Finished Lr='+str(Lr)+' dataset')
+    RMS_surf_Ln = np.ones(len(Ln_data))
+    MAX_surf_Ln = np.ones(len(Ln_data))
+    RMS_local_Ln = np.ones(len(Ln_data))
+    max_Fnorm_Ln = np.ones(len(Ln_data))
+    Energy1_Ln = np.ones(len(Ln_data))
+    Energy2_Ln = np.ones(len(Ln_data))
+    Energy3_Ln = np.ones(len(Ln_data))
+    Runtime_Ln = np.ones(len(Ln_data))
+    for i,Ln in enumerate(Ln_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_Ln_"+str(i)+".pkl", "rb" ) )
+        Energy1_Ln[i] = Func.E_norm[0] # Measurement of the curvature energy
+        Energy2_Ln[i] = Func.E_norm[1] # Surf energy
+        Energy3_Ln[i] = Func.E_norm[2] # local energy
         ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-        RMS_local_L2[i] = np.mean(data)
+        RMS_local_Ln[i] = np.mean(data)
         phi = Func.eval_surface()
-        MAX_surf_L2[i] = np.max(abs(phi))/Func.Bbox_diag
-        RMS_surf_L2[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        max_Fnorm_L2[i] = Func.get_max_Fnorm()
-        Runtime_L2[i] = Func.runtime
-        print('Finished L2='+str(L2)+' dataset')
-    RMS_surf_L3 = np.ones(len(L3_data))
-    MAX_surf_L3 = np.ones(len(L3_data))
-    RMS_local_L3 = np.ones(len(L3_data))
-    max_Fnorm_L3 = np.ones(len(L2_data))
-    Energy1_L3 = np.ones(len(L3_data))
-    Energy2_L3 = np.ones(len(L3_data))
-    Energy3_L3 = np.ones(len(L3_data))
-    Runtime_L3 = np.ones(len(L3_data))
-    for i,L3 in enumerate(L3_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L3_"+str(i)+".pkl", "rb" ) )
-        Energy1_L3[i] = Func.E_norm[0] # Measurement of the curvature energy
-        Energy2_L3[i] = Func.E_norm[1] # Surf energy
-        Energy3_L3[i] = Func.E_norm[2] # local energy
+        MAX_surf_Ln[i] = np.max(abs(phi))/Func.Bbox_diag
+        RMS_surf_Ln[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+        max_Fnorm_Ln[i] = Func.get_max_Fnorm()
+        Runtime_Ln[i] = Func.runtime
+        print('Finished Ln='+str(Ln)+' dataset')
+    RMS_surf_Lp = np.ones(len(Lp_data))
+    MAX_surf_Lp = np.ones(len(Lp_data))
+    RMS_local_Lp = np.ones(len(Lp_data))
+    max_Fnorm_Lp = np.ones(len(Ln_data))
+    Energy1_Lp = np.ones(len(Lp_data))
+    Energy2_Lp = np.ones(len(Lp_data))
+    Energy3_Lp = np.ones(len(Lp_data))
+    Runtime_Lp = np.ones(len(Lp_data))
+    for i,Lp in enumerate(Lp_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_Lp_"+str(i)+".pkl", "rb" ) )
+        Energy1_Lp[i] = Func.E_norm[0] # Measurement of the curvature energy
+        Energy2_Lp[i] = Func.E_norm[1] # Surf energy
+        Energy3_Lp[i] = Func.E_norm[2] # local energy
         ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-        RMS_local_L3[i] = np.mean(data)
+        RMS_local_Lp[i] = np.mean(data)
         phi = Func.eval_surface()
-        MAX_surf_L3[i] = np.max(abs(phi))/Func.Bbox_diag
-        RMS_surf_L3[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        max_Fnorm_L3[i] = Func.get_max_Fnorm()
-        Runtime_L3[i] = Func.runtime
-        print('Finished L3='+str(L3)+' dataset')
+        MAX_surf_Lp[i] = np.max(abs(phi))/Func.Bbox_diag
+        RMS_surf_Lp[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+        max_Fnorm_Lp[i] = Func.get_max_Fnorm()
+        Runtime_Lp[i] = Func.runtime
+        print('Finished Lp='+str(Lp)+' dataset')
 
     sns.set(style='ticks')
     fig1, axs1 = plt.subplots(2,1,sharex=True,figsize=(6,7),dpi=180)
     fig1.subplots_adjust(hspace=0)
-    axs1[0].loglog(L1_data,Energy3_L1/Energy3_L1[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
-    axs1[0].loglog(L1_data,Energy2_L1/Energy2_L1[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
-    axs1[0].loglog(L1_data,Energy1_L1/Energy1_L1[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
+    axs1[0].loglog(Lr_data,Energy3_Lr/Energy3_Lr[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
+    axs1[0].loglog(Lr_data,Energy2_Lr/Energy2_Lr[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
+    axs1[0].loglog(Lr_data,Energy1_Lr/Energy1_Lr[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
     axs1[0].set_ylabel('Energy about $\lambda_1={}$'.format(L[0]))
-    axs1[0].set_xticks(L1_data)
+    axs1[0].set_xticks(Lr_data)
     axs1[0].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
     axs1[0].set_ylim(2e-2,1e3)
     axs1[0].grid()
 
-    axs1[1].loglog(L1_data,max_Fnorm_L1,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    axs1[1].loglog(L1_data,RMS_local_L1,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
-    axs1[1].loglog(L1_data,RMS_surf_L1,'o-', linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # axs1[1].loglog(L1_data,Runtime_L1/Runtime_L1[4],'.--',markersize=8,label='Optimization time')
-    # ax4.loglog(L1_data,MAX_surf_L1,'.-',markersize=8,color='tab:cyan',label='Max Surface Error')
+    axs1[1].loglog(Lr_data,max_Fnorm_Lr,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    axs1[1].loglog(Lr_data,RMS_local_Lr,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
+    axs1[1].loglog(Lr_data,RMS_surf_Lr,'o-', linewidth=2,markersize=6,color='tab:blue',label='Surface')
+    # axs1[1].loglog(Lr_data,Runtime_Lr/Runtime_Lr[4],'.--',markersize=8,label='Optimization time')
+    # ax4.loglog(Lr_data,MAX_surf_Lr,'.-',markersize=8,color='tab:cyan',label='Max Surface Error')
     axs1[1].set_xlabel('$\lambda_1$')
     axs1[1].set_ylabel('Error')
-    axs1[1].set_xticks(L1_data)
+    axs1[1].set_xticks(Lr_data)
     axs1[1].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
     axs1[1].set_ylim(3e-4,1e1)
     axs1[1].grid()
     sns.despine()
     fig1.subplots_adjust(hspace=0)
     plt.tight_layout()
-    plt.savefig('PDF_figures/L1.pdf',bbox_inches='tight')
+    plt.savefig('PDF_figures/Lr.pdf',bbox_inches='tight')
 
     sns.set(style='ticks')
     fig2, axs2 = plt.subplots(2,1,sharex=True,figsize=(6,7),dpi=180)
-    axs2[0].loglog(L2_data,Energy3_L2/Energy3_L2[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
-    axs2[0].loglog(L2_data,Energy2_L2/Energy2_L2[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
-    axs2[0].loglog(L2_data,Energy1_L2/Energy1_L2[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
+    axs2[0].loglog(Ln_data,Energy3_Ln/Energy3_Ln[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
+    axs2[0].loglog(Ln_data,Energy2_Ln/Energy2_Ln[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
+    axs2[0].loglog(Ln_data,Energy1_Ln/Energy1_Ln[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
     axs2[0].set_ylabel('Energy about $\lambda_2={}$'.format(L[1]))
-    axs1[0].set_xticks(L2_data)
+    axs1[0].set_xticks(Ln_data)
     axs2[0].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
     axs2[0].set_ylim(2e-2,1e3)
     axs2[0].grid()
-    axs2[1].loglog(L2_data,max_Fnorm_L2,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    axs2[1].loglog(L2_data,RMS_local_L2,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
-    axs2[1].loglog(L2_data,RMS_surf_L2, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # axs2[1].loglog(L2_data,Runtime_L2/Runtime_L2[4],'.--',markersize=8,label='Optimization time')
-    # axs2[1].loglog(L2_data,MAX_surf_L2,'.-',markersize=8,color='tab:cyan',label='Max Surface')
+    axs2[1].loglog(Ln_data,max_Fnorm_Ln,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    axs2[1].loglog(Ln_data,RMS_local_Ln,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
+    axs2[1].loglog(Ln_data,RMS_surf_Ln, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
+    # axs2[1].loglog(Ln_data,Runtime_Ln/Runtime_Ln[4],'.--',markersize=8,label='Optimization time')
+    # axs2[1].loglog(Ln_data,MAX_surf_Ln,'.-',markersize=8,color='tab:cyan',label='Max Surface')
     axs2[1].set_xlabel('$\lambda_2$')
     axs2[1].set_ylabel('Error')
-    axs2[1].set_xticks(L2_data)
+    axs2[1].set_xticks(Ln_data)
     axs2[1].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
     axs2[1].set_ylim(3e-4,1e1)
     axs2[1].grid()
     sns.despine()
     fig2.subplots_adjust(hspace=0)
     plt.tight_layout()
-    plt.savefig('PDF_figures/L2.pdf',bbox_inches='tight')
+    plt.savefig('PDF_figures/Ln.pdf',bbox_inches='tight')
 
     sns.set(style='ticks')
     fig3, axs3 = plt.subplots(2,1,sharex=True,figsize=(6,7),dpi=180)
-    axs3[0].loglog(L3_data,Energy3_L3/Energy3_L3[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
-    axs3[0].loglog(L3_data,Energy2_L3/Energy2_L3[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
-    axs3[0].loglog(L3_data,Energy1_L3/Energy1_L3[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
+    axs3[0].loglog(Lp_data,Energy3_Lp/Energy3_Lp[4],'*--',linewidth=2,markersize=12,color='tab:orange',label='$\mathcal{E}_1$')
+    axs3[0].loglog(Lp_data,Energy2_Lp/Energy2_Lp[4],'D--',linewidth=2,markersize=6,color='tab:red',label='$\mathcal{E}_2$')
+    axs3[0].loglog(Lp_data,Energy1_Lp/Energy1_Lp[4],'o--',linewidth=2,markersize=6,color='tab:blue',label='$\mathcal{E}_3$')
     axs3[0].set_ylabel('Energy about $\lambda_3={}$'.format(L[2]))
-    axs3[0].set_xticks(L3_data)
+    axs3[0].set_xticks(Lp_data)
     axs3[0].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
     axs3[0].set_ylim(2e-2,1e3)
     axs3[0].grid()
-    axs3[1].loglog(L3_data,max_Fnorm_L3,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    axs3[1].loglog(L3_data,RMS_local_L3,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
-    axs3[1].loglog(L3_data,RMS_surf_L3, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
-    # axs3[1].loglog(L3_data,Runtime_L3/Runtime_L3[4],'.--',markersize=8,label='Optimization time')
-    # axs3[1].loglog(L3_data,MAX_surf_L3,'.-',markersize=8,color='tab:cyan',label='Max Surface')
+    axs3[1].loglog(Lp_data,max_Fnorm_Lp,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    axs3[1].loglog(Lp_data,RMS_local_Lp,'D-',linewidth=2,markersize=6,color='tab:red',label='Local')
+    axs3[1].loglog(Lp_data,RMS_surf_Lp, 'o-',linewidth=2,markersize=6,color='tab:blue',label='Surface')
+    # axs3[1].loglog(Lp_data,Runtime_Lp/Runtime_Lp[4],'.--',markersize=8,label='Optimization time')
+    # axs3[1].loglog(Lp_data,MAX_surf_Lp,'.-',markersize=8,color='tab:cyan',label='Max Surface')
     axs3[1].set_xlabel('$\lambda_3$')
     axs3[1].set_ylabel('Error')
-    axs3[1].set_xticks(L3_data)
+    axs3[1].set_xticks(Lp_data)
     axs3[1].legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white')
     axs3[1].set_ylim(3e-4,1e1)
     axs3[1].grid()
@@ -336,87 +334,87 @@ if mode == 'Visualize_lambdas_energies':
     fig3.subplots_adjust(hspace=0)
     plt.tight_layout()
     
-    plt.savefig('PDF_figures/L3.pdf',bbox_inches='tight')
+    plt.savefig('PDF_figures/Lp.pdf',bbox_inches='tight')
 
 if mode == 'Visualize_lambdas':
-    L1_data = data
-    L2_data = data
-    L3_data = data
-    RMS_surf_L1 = np.ones(len(L1_data))
-    MAX_surf_L1 = np.ones(len(L1_data))
-    RMS_local_L1 = np.ones(len(L1_data))
-    max_Fnorm_L1 = np.ones(len(L1_data))
-    Energy1_L1 = np.ones(len(L1_data))
-    Energy2_L1 = np.ones(len(L1_data))
-    Energy3_L1 = np.ones(len(L1_data))
-    Runtime_L1 = np.ones(len(L1_data))
-    for i,L1 in enumerate(L1_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L1_"+str(i)+".pkl", "rb" ) )
-        Energy1_L1[i] = Func.E_norm[0] # Measurement of the curvature energy
-        Energy2_L1[i] = Func.E_norm[1] # Local energy
-        Energy3_L1[i] = Func.E_norm[2] # Surf energy
+    Lr_data = data
+    Ln_data = data
+    Lp_data = data
+    RMS_surf_Lr = np.ones(len(Lr_data))
+    MAX_surf_Lr = np.ones(len(Lr_data))
+    RMS_local_Lr = np.ones(len(Lr_data))
+    max_Fnorm_Lr = np.ones(len(Lr_data))
+    Energy1_Lr = np.ones(len(Lr_data))
+    Energy2_Lr = np.ones(len(Lr_data))
+    Energy3_Lr = np.ones(len(Lr_data))
+    Runtime_Lr = np.ones(len(Lr_data))
+    for i,Lr in enumerate(Lr_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_Lr_"+str(i)+".pkl", "rb" ) )
+        Energy1_Lr[i] = Func.E_norm[0] # Measurement of the curvature energy
+        Energy2_Lr[i] = Func.E_norm[1] # Local energy
+        Energy3_Lr[i] = Func.E_norm[2] # Surf energy
         ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-        RMS_local_L1[i] = np.mean(data)
+        RMS_local_Lr[i] = np.mean(data)
         phi = Func.eval_surface()
-        MAX_surf_L1[i] = np.max(abs(phi))/Func.Bbox_diag
-        RMS_surf_L1[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        # max_Fnorm_L1[i] = Func.get_RMS_Fnorm()
-        Runtime_L1[i] = Func.runtime
-        print('Finished L1='+str(L1)+' dataset')
-    RMS_surf_L2 = np.ones(len(L2_data))
-    MAX_surf_L2 = np.ones(len(L2_data))
-    RMS_local_L2 = np.ones(len(L2_data))
-    max_Fnorm_L2 = np.ones(len(L2_data))
-    Energy1_L2 = np.ones(len(L2_data))
-    Energy2_L2 = np.ones(len(L2_data))
-    Energy3_L2 = np.ones(len(L2_data))
-    Runtime_L2 = np.ones(len(L2_data))
-    for i,L2 in enumerate(L2_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L2_"+str(i)+".pkl", "rb" ) )
-        Energy1_L2[i] = Func.E_norm[0] # Measurement of the curvature energy
-        Energy2_L2[i] = Func.E_norm[1] # Surf energy
-        Energy3_L2[i] = Func.E_norm[2] # local energy
+        MAX_surf_Lr[i] = np.max(abs(phi))/Func.Bbox_diag
+        RMS_surf_Lr[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+        # max_Fnorm_Lr[i] = Func.get_RMS_Fnorm()
+        Runtime_Lr[i] = Func.runtime
+        print('Finished Lr='+str(Lr)+' dataset')
+    RMS_surf_Ln = np.ones(len(Ln_data))
+    MAX_surf_Ln = np.ones(len(Ln_data))
+    RMS_local_Ln = np.ones(len(Ln_data))
+    max_Fnorm_Ln = np.ones(len(Ln_data))
+    Energy1_Ln = np.ones(len(Ln_data))
+    Energy2_Ln = np.ones(len(Ln_data))
+    Energy3_Ln = np.ones(len(Ln_data))
+    Runtime_Ln = np.ones(len(Ln_data))
+    for i,Ln in enumerate(Ln_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_Ln_"+str(i)+".pkl", "rb" ) )
+        Energy1_Ln[i] = Func.E_norm[0] # Measurement of the curvature energy
+        Energy2_Ln[i] = Func.E_norm[1] # Surf energy
+        Energy3_Ln[i] = Func.E_norm[2] # local energy
         ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-        RMS_local_L2[i] = np.mean(data)
+        RMS_local_Ln[i] = np.mean(data)
         phi = Func.eval_surface()
-        MAX_surf_L2[i] = np.max(abs(phi))/Func.Bbox_diag
-        RMS_surf_L2[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        # max_Fnorm_L2[i] = Func.get_RMS_Fnorm()
-        Runtime_L2[i] = Func.runtime
-        print('Finished L2='+str(L2)+' dataset')
-    RMS_surf_L3 = np.ones(len(L3_data))
-    MAX_surf_L3 = np.ones(len(L3_data))
-    RMS_local_L3 = np.ones(len(L3_data))
-    max_Fnorm_L3 = np.ones(len(L2_data))
-    Energy1_L3 = np.ones(len(L3_data))
-    Energy2_L3 = np.ones(len(L3_data))
-    Energy3_L3 = np.ones(len(L3_data))
-    Runtime_L3 = np.ones(len(L3_data))
-    for i,L3 in enumerate(L3_data):
-        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_L3_"+str(i)+".pkl", "rb" ) )
-        Energy1_L3[i] = Func.E_norm[0] # Measurement of the curvature energy
-        Energy2_L3[i] = Func.E_norm[1] # Surf energy
-        Energy3_L3[i] = Func.E_norm[2] # local energy
+        MAX_surf_Ln[i] = np.max(abs(phi))/Func.Bbox_diag
+        RMS_surf_Ln[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+        # max_Fnorm_Ln[i] = Func.get_RMS_Fnorm()
+        Runtime_Ln[i] = Func.runtime
+        print('Finished Ln='+str(Ln)+' dataset')
+    RMS_surf_Lp = np.ones(len(Lp_data))
+    MAX_surf_Lp = np.ones(len(Lp_data))
+    RMS_local_Lp = np.ones(len(Lp_data))
+    max_Fnorm_Lp = np.ones(len(Ln_data))
+    Energy1_Lp = np.ones(len(Lp_data))
+    Energy2_Lp = np.ones(len(Lp_data))
+    Energy3_Lp = np.ones(len(Lp_data))
+    Runtime_Lp = np.ones(len(Lp_data))
+    for i,Lp in enumerate(Lp_data):
+        Func = pickle.load( open( "SAVED_DATA/Opt_Bunny_Lp_"+str(i)+".pkl", "rb" ) )
+        Energy1_Lp[i] = Func.E_norm[0] # Measurement of the curvature energy
+        Energy2_Lp[i] = Func.E_norm[1] # Surf energy
+        Energy3_Lp[i] = Func.E_norm[2] # local energy
         ep_range,data = Func.check_local_RMS_error(1,2) # 1% both ways, average the error
-        RMS_local_L3[i] = np.mean(data)
+        RMS_local_Lp[i] = np.mean(data)
         phi = Func.eval_surface()
-        MAX_surf_L3[i] = np.max(abs(phi))/Func.Bbox_diag
-        RMS_surf_L3[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
-        # max_Fnorm_L3[i] = Func.get_RMS_Fnorm()
-        Runtime_L3[i] = Func.runtime
-        print('Finished L3='+str(L3)+' dataset')
+        MAX_surf_Lp[i] = np.max(abs(phi))/Func.Bbox_diag
+        RMS_surf_Lp[i] = np.sqrt(np.mean(phi**2))/Func.Bbox_diag
+        # max_Fnorm_Lp[i] = Func.get_RMS_Fnorm()
+        Runtime_Lp[i] = Func.runtime
+        print('Finished Lp='+str(Lp)+' dataset')
 
     sns.set(style='ticks')
     fig1= plt.figure(figsize=(5,4),dpi=180)
     ax1 = plt.axes()
-    # ax1.loglog(L1_data,max_Fnorm_L1,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    ax1.loglog(L1_data,RMS_local_L1,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
-    ax1.loglog(L1_data,RMS_surf_L1,'o-', linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
-    # ax1.loglog(L1_data,Runtime_L1/Runtime_L1[4],'.--',markersize=8,label='Optimization time')
-    # ax1.loglog(L1_data,MAX_surf_L1,'.-',markersize=8,color='tab:cyan',label='Max Surface Error')
+    # ax1.loglog(Lr_data,max_Fnorm_Lr,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    ax1.loglog(Lr_data,RMS_local_Lr,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
+    ax1.loglog(Lr_data,RMS_surf_Lr,'o-', linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
+    # ax1.loglog(Lr_data,Runtime_Lr/Runtime_Lr[4],'.--',markersize=8,label='Optimization time')
+    # ax1.loglog(Lr_data,MAX_surf_Lr,'.-',markersize=8,color='tab:cyan',label='Max Surface Error')
     ax1.set_xlabel('$\lambda_r$',fontsize=16)
     ax1.set_ylabel('RMS Error',fontsize=16)
-    ax1.set_xticks(L1_data)
+    ax1.set_xticks(Lr_data)
     ax1.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white',fontsize=12)
     ax1.set_ylim(3e-4,1e2)
     ax1.set_ylim(1e-4,1e0)
@@ -429,14 +427,14 @@ if mode == 'Visualize_lambdas':
     sns.set(style='ticks')
     fig2= plt.figure(figsize=(5,4),dpi=180)
     ax2 = plt.axes()
-    # ax2.loglog(L2_data,max_Fnorm_L2,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    ax2.loglog(L2_data,RMS_local_L2,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
-    ax2.loglog(L2_data,RMS_surf_L2, 'o-',linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
-    # ax2.loglog(L2_data,Runtime_L2/Runtime_L2[4],'.--',markersize=8,label='Optimization time')
-    # ax2.loglog(L2_data,MAX_surf_L2,'.-',markersize=8,color='tab:cyan',label='Max Surface')
+    # ax2.loglog(Ln_data,max_Fnorm_Ln,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    ax2.loglog(Ln_data,RMS_local_Ln,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
+    ax2.loglog(Ln_data,RMS_surf_Ln, 'o-',linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
+    # ax2.loglog(Ln_data,Runtime_Ln/Runtime_Ln[4],'.--',markersize=8,label='Optimization time')
+    # ax2.loglog(Ln_data,MAX_surf_Ln,'.-',markersize=8,color='tab:cyan',label='Max Surface')
     ax2.set_xlabel('$\lambda_n$',fontsize=16)
     ax2.set_ylabel('RMS Error',fontsize=16)
-    ax2.set_xticks(L2_data)
+    ax2.set_xticks(Ln_data)
     ax2.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white',fontsize=12)
     ax2.set_ylim(3e-4,1e2)
     ax2.set_ylim(1e-4,1e0)
@@ -449,14 +447,14 @@ if mode == 'Visualize_lambdas':
     sns.set(style='ticks')
     fig3= plt.figure(figsize=(5,4),dpi=180)
     ax3 = plt.axes()
-    # ax3.loglog(L3_data,max_Fnorm_L3,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
-    ax3.loglog(L3_data,RMS_local_L3,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
-    ax3.loglog(L3_data,RMS_surf_L3, 'o-',linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
-    # ax3.loglog(L3_data,Runtime_L3/Runtime_L3[4],'.--',markersize=8,label='Optimization time')
-    # ax3.loglog(L3_data,MAX_surf_L3,'.-',markersize=8,color='tab:cyan',label='Max Surface')
+    # ax3.loglog(Lp_data,max_Fnorm_Lp,'*-',linewidth=2,markersize=12,color='tab:orange',label='Curvature')
+    ax3.loglog(Lp_data,RMS_local_Lp,'D-',linewidth=2,markersize=6,color='tab:red',label='Off-Surface $(\pm 0.01)$')
+    ax3.loglog(Lp_data,RMS_surf_Lp, 'o-',linewidth=2,markersize=6,color='tab:blue',label='On-Surface')
+    # ax3.loglog(Lp_data,Runtime_Lp/Runtime_Lp[4],'.--',markersize=8,label='Optimization time')
+    # ax3.loglog(Lp_data,MAX_surf_Lp,'.-',markersize=8,color='tab:cyan',label='Max Surface')
     ax3.set_xlabel('$\lambda_p$',fontsize=16)
     ax3.set_ylabel('RMS Error',fontsize=16)
-    ax3.set_xticks(L3_data)
+    ax3.set_xticks(Lp_data)
     ax3.legend(loc='upper left',framealpha=1,edgecolor='black',facecolor='white',fontsize=12)
     ax3.set_ylim(3e-4,1e2)
     ax3.set_ylim(1e-4,1e0)
@@ -467,13 +465,13 @@ if mode == 'Visualize_lambdas':
     plt.savefig('PDF_figures/Lp.pdf',bbox_inches='tight')
 
     fig6_data = {}
-    fig6_data["RMS_local_L1"] = RMS_local_L1
-    fig6_data["RMS_surf_L1"] = RMS_surf_L1
-    fig6_data["RMS_local_L2"] = RMS_local_L2
-    fig6_data["RMS_surf_L2"] = RMS_surf_L2
-    fig6_data["RMS_local_L3"] = RMS_local_L3
-    fig6_data["RMS_surf_L3"] = RMS_surf_L3
-    fig6_data["lambda_range"] = L1_data
+    fig6_data["RMS_local_Lr"] = RMS_local_Lr
+    fig6_data["RMS_surf_Lr"] = RMS_surf_Lr
+    fig6_data["RMS_local_Ln"] = RMS_local_Ln
+    fig6_data["RMS_surf_Ln"] = RMS_surf_Ln
+    fig6_data["RMS_local_Lp"] = RMS_local_Lp
+    fig6_data["RMS_surf_Lp"] = RMS_surf_Lp
+    fig6_data["lambda_range"] = Lr_data
     pickle.dump(fig6_data, open("fig6_data.pkl","wb"))
 
 if mode == 'Plot_data':

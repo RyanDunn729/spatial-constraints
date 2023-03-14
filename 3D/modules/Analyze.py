@@ -25,13 +25,27 @@ class model(object):
         dim = self.dim
         ######### Initialize Volume #########
         Func = MyProblem(surf_pts, normals, self.max_cps, self.border, order, exact=self.exact, )
-        scaling, bases_surf, bases_curv = Func.get_values()
-
+        scaling = Func.scaling
+        phi_init = Func.cps[:,3]
         # Key vector sizes
         num_cps_pts  = Func.num_cps_pts
         num_hess_pts = Func.num_hess_pts
         num_surf_pts = Func.num_surf_pts
-
+        #################################
+        bases_surf = [
+            Func.get_basis(loc='surf',du=0,dv=0,dw=0),
+            Func.get_basis(loc='surf',du=1,dv=0,dw=0),
+            Func.get_basis(loc='surf',du=0,dv=1,dw=0),
+            Func.get_basis(loc='surf',du=0,dv=0,dw=1),
+        ]
+        bases_curv = [
+            Func.get_basis(loc='hess',du=2,dv=0,dw=0),
+            Func.get_basis(loc='hess',du=0,dv=2,dw=0),
+            Func.get_basis(loc='hess',du=1,dv=1,dw=0),
+            Func.get_basis(loc='hess',du=0,dv=1,dw=1),
+            Func.get_basis(loc='hess',du=1,dv=0,dw=1),
+            Func.get_basis(loc='hess',du=0,dv=0,dw=2),
+        ]
         #################################
         EnergyMinModel = om.Group()
         EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
@@ -79,10 +93,10 @@ class model(object):
         Prob.driver.opt_settings['Major optimality tolerance'] = self.tol
         Prob.setup()
         #################################
-        if init_manual:
+        if init_manual is not None:
             Prob['phi_cps'] = init_manual
         else:
-            Prob['phi_cps'] = Func.cps[:,3]
+            Prob['phi_cps'] = phi_init
         #################################
         Prob.run_model()
         t1 = time.time()

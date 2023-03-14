@@ -168,20 +168,6 @@ bases_curv = [
     Func.get_basis(loc='hess',du=0,dv=0,dw=2),
 ]
 #################################
-basis_200 = Func.get_basis('hess',du=2,dv=0,dw=0)
-basis_110 = Func.get_basis('hess',du=1,dv=1,dw=0)
-basis_020 = Func.get_basis('hess',du=0,dv=2,dw=0)
-basis_101 = Func.get_basis('hess',du=1,dv=0,dw=1)
-basis_011 = Func.get_basis('hess',du=0,dv=1,dw=1)
-basis_002 = Func.get_basis('hess',du=0,dv=0,dw=2) 
-dxx = scaling[0]*scaling[0]*basis_200.dot(phi_init)
-dxy = scaling[0]*scaling[1]*basis_110.dot(phi_init)
-dyy = scaling[1]*scaling[1]*basis_020.dot(phi_init)
-dxz = scaling[0]*scaling[2]*basis_101.dot(phi_init)
-dyz = scaling[1]*scaling[2]*basis_011.dot(phi_init)
-dzz = scaling[2]*scaling[2]*basis_002.dot(phi_init)
-Er0 = np.sum( dxx**2 + 2*dxy**2 + dyy**2 + 2*dxz**2 + 2*dyz**2 + dzz**2) / num_hess_pts
-#################################
 EnergyMinModel = om.Group()
 EnergyMinModel.add_subsystem('Curvature_Sampling', curv_sampling(
         num_cps=num_cps_pts,
