@@ -18,11 +18,11 @@ print('Imported Packages \n')
 ######### Configurables #########
 dim = 2
 order = 4
-max_cps = 72
+max_cps = 46
 
-Lp = 1e3
-Ln = 10.
-Lr = 1e-2
+Lp = 1e0
+Ln = 1e0
+Lr = 1e-4
 
 tol = 1e-4
 
@@ -68,7 +68,8 @@ num_cps = np.zeros(2,dtype=int)
 for i,ratio in enumerate(frac):
     if ratio < 0.75:
         ratio = 0.75
-    num_cps[i] = int(np.round(frac[i]*max_cps)+order-1)
+    num_cps[i] = int(frac[i]*max_cps)
+    # num_cps[i] = int((frac[i]*max_cps)+order-1)
 
 ######### Initialize Volume #########
 Func = MyProblem(pts, normals, num_cps, order, custom_dimensions, exact=exact)
@@ -93,8 +94,8 @@ bases_surf = [
 ]
 bases_curv = [
     Func.get_basis(loc='hess',du=2,dv=0),
-    Func.get_basis(loc='hess',du=0,dv=2),
     Func.get_basis(loc='hess',du=1,dv=1),
+    Func.get_basis(loc='hess',du=0,dv=2),
 ]
 #################################
 EnergyMinModel = om.Group()

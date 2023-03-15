@@ -44,14 +44,14 @@ class MyProblem(object):
         ### Get u,v for surface points ###
         self.u['surf'], self.v['surf'] = self.spatial_to_parametric(surf_pts)
         # Get uv_hess
-        u_vec = kv_u[(order-1):(num_cps[0] + 1)]
-        u_vec = u_vec[::(order-1)]
-        v_vec = kv_v[(order-1):(num_cps[1] + 1)]
-        v_vec = v_vec[::(order-1)]
-        vv,uu = np.meshgrid(
-            v_vec, u_vec
-        )
-        self.u['hess'], self.v['hess'] = uu.flatten(), vv.flatten()
+        # u_vec = kv_u[(order-1):(num_cps[0] + 1)]
+        # u_vec = u_vec[::(order-1)]
+        # v_vec = kv_v[(order-1):(num_cps[1] + 1)]
+        # v_vec = v_vec[::(order-1)]
+        # vv,uu = np.meshgrid(
+        #     v_vec, u_vec
+        # )
+        # self.u['hess'], self.v['hess'] = uu.flatten(), vv.flatten()
         temp_u, temp_v = self.spatial_to_parametric(self.cps[:,0:2])
         mask = np.argwhere(
             (temp_u>=0)*(temp_u<=1)*\

@@ -161,10 +161,10 @@ bases_surf = [
 ]
 bases_curv = [
     Func.get_basis(loc='hess',du=2,dv=0,dw=0),
-    Func.get_basis(loc='hess',du=0,dv=2,dw=0),
     Func.get_basis(loc='hess',du=1,dv=1,dw=0),
-    Func.get_basis(loc='hess',du=0,dv=1,dw=1),
+    Func.get_basis(loc='hess',du=0,dv=2,dw=0),
     Func.get_basis(loc='hess',du=1,dv=0,dw=1),
+    Func.get_basis(loc='hess',du=0,dv=1,dw=1),
     Func.get_basis(loc='hess',du=0,dv=0,dw=2),
 ]
 #################################

@@ -17,10 +17,8 @@ order = 4
 max_cps = 46
 
 Lp = 1e0
-Ln = 1e3
-Lr = 1e-3
-
-tol = 1e-4
+Ln = 1e0
+Lr = 1e-2
 
 visualize_init = False
 
@@ -64,6 +62,8 @@ num_cps = np.zeros(2,dtype=int)
 for i,ratio in enumerate(frac):
     if ratio < 0.75:
         ratio = 0.75
+    num_cps[i] = int(frac[i]*max_cps)
+    # num_cps[i] = int((frac[i]*max_cps)+order-1)
     num_cps[i] = 3*int((frac[i]*max_cps)/3)
 
 ######### Initialize Volume #########
@@ -83,31 +83,16 @@ if visualize_init:
     plt.show()
     exit()
 #################################
-bases_surf = [
-    Func.get_basis(loc='surf',du=0,dv=0),
-    Func.get_basis(loc='surf',du=1,dv=0),
-    Func.get_basis(loc='surf',du=0,dv=1),
-]
-bases_curv = [
-    Func.get_basis(loc='hess',du=2,dv=0),
-    Func.get_basis(loc='hess',du=0,dv=2),
-    Func.get_basis(loc='hess',du=1,dv=1),
-    Func.get_basis(loc='hess',du=0,dv=1),
-    Func.get_basis(loc='hess',du=1,dv=0),
-    Func.get_basis(loc='hess',du=0,dv=0),
-]
-#################################
-
-A0 = bbox_diag*Func.get_basis(loc='surf',du=0,dv=0).toarray()
-Ax = bbox_diag*scaling[0]*Func.get_basis(loc='surf',du=1,dv=0).toarray()
-Ay = bbox_diag*scaling[1]*Func.get_basis(loc='surf',du=0,dv=1).toarray()
-Axx = bbox_diag*bbox_diag*scaling[0]*scaling[0]*Func.get_basis(loc='hess',du=2,dv=0).toarray()
-Axy = bbox_diag*bbox_diag*scaling[0]*scaling[1]*Func.get_basis(loc='hess',du=1,dv=1).toarray()
-Ayy = bbox_diag*bbox_diag*scaling[1]*scaling[1]*Func.get_basis(loc='hess',du=0,dv=2).toarray()
+A0 = Func.get_basis(loc='surf',du=0,dv=0).toarray()
+Ax = scaling[0]*Func.get_basis(loc='surf',du=1,dv=0).toarray()
+Ay = scaling[1]*Func.get_basis(loc='surf',du=0,dv=1).toarray()
+Axx = scaling[0]*scaling[0]*Func.get_basis(loc='hess',du=2,dv=0).toarray()
+Axy = scaling[0]*scaling[1]*Func.get_basis(loc='hess',du=1,dv=1).toarray()
+Ayy = scaling[1]*scaling[1]*Func.get_basis(loc='hess',du=0,dv=2).toarray()
 
 from numpy import newaxis as na
-nx = bbox_diag*normals[na,:,0]
-ny = bbox_diag*normals[na,:,1]
+nx = normals[na,:,0]
+ny = normals[na,:,1]
 
 An = np.transpose(Ax)@Ax + np.transpose(Ay)@Ay
 Ar = np.transpose(Axx)@Axx + 2*np.transpose(Axy)@Axy + np.transpose(Ayy)@Ayy
@@ -116,8 +101,8 @@ A = Lp/num_surf_pts * (np.transpose(A0)@A0)
 A += Ln/num_surf_pts * (An)
 A += Lr/num_hess_pts * (Ar)
 
-b = Ln/num_surf_pts * (2*nx@Ax + 2*ny@Ay)
-phi_QP = bbox_diag*np.linalg.solve(A,-b.flatten())
+b = Ln/num_surf_pts * (nx@Ax + ny@Ay)
+phi_QP = np.linalg.solve(A,-b.flatten())
 #################################
 Func.set_cps(phi_QP)
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
@@ -129,4 +114,7 @@ print('Surface error (rel): \n',
 print('Surface error (units): \n',
         'Max: ',Func.Bbox_diag*np.max(abs(phi)),'\n',
         'RMS: ',Func.Bbox_diag*np.sqrt(np.mean(phi**2)))
+dx,dy = Func.gradient_eval_surface()
+nx,ny = Func.normals[:,0],Func.normals[:,1]
+print("avg gradient error: ",np.mean( (dx+nx)**2 + (dy+ny)**2))
 print('END')
