@@ -37,15 +37,15 @@ ax1.loglog(Ngamma_range,bf_OM(Ngamma_range), 'k-',linewidth=6,alpha=0.13)
 ax1.loglog(Ngamma_range,np.exp(bf_EM(np.log(Ngamma_range))), 'k-',linewidth=6,alpha=0.13)
 ax1.loglog(Ngamma_range,np.exp(bf_CM(np.log(Ngamma_range))), 'k-',linewidth=6,alpha=0.13)
 
-ax1.loglog(Ngamma_range,time_ours,'.-',label=('Our Method'),color='tab:blue',markersize=10,linewidth=2)
-ax1.loglog(Ngamma_range,time_explicit,'.--',label=('Explicit Method'),color='tab:orange',markersize=10,linewidth=2)
+ax1.loglog(Ngamma_range,time_ours,'.-',label=('Our method'),color='tab:blue',markersize=10,linewidth=2)
+ax1.loglog(Ngamma_range,time_explicit,'.--',label=('Hicken \& Kaur'),color='tab:orange',markersize=10,linewidth=2)
 ax1.loglog(Ngamma_range,time_Lin_et_al,'.:',label=('Lin et al.'),color='tab:green',markersize=10,linewidth=2)
 
 plt.text(1.5e3,5e-4,'$\mathcal{O}(N_{\Gamma})$',fontsize=14)
 plt.text(5e4,3.8e-6,'$\mathcal{O}(1)$', fontsize=14)
 
 ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
-ax1.set_ylabel('Evaluation Time per point (sec)',fontsize=14)
+ax1.set_ylabel('Evaluation time per point (sec)',fontsize=14)
 ax1.legend(fontsize=14,framealpha=1,edgecolor='black',facecolor='white')
 ax1.grid()
 ax1.set_ylim(1e-6,2e-2)
@@ -58,8 +58,8 @@ sns.set(style='ticks')
 set_fonts()
 fig1 = plt.figure(figsize=(5,5),dpi=160)
 ax1 = plt.axes()
-ax1.loglog(Ngamma_range,our_onsurf,'.-',color='tab:blue',markersize=14,linewidth=2,label=('Our Method'))
-ax1.loglog(Ngamma_range,explicit_onsurf,'.--',color='tab:orange',markersize=14,linewidth=2,label=('Explicit Method'))
+ax1.loglog(Ngamma_range,our_onsurf,'.-',color='tab:blue',markersize=14,linewidth=2,label=('Our method'))
+ax1.loglog(Ngamma_range,explicit_onsurf,'.--',color='tab:orange',markersize=14,linewidth=2,label=('Hicken \& Kaur'))
 ax1.set_xlabel('$N_{\Gamma}$',fontsize=14)
 ax1.set_ylabel('On-surface RMS error',fontsize=14)
 ax1.legend(fontsize=12,framealpha=1,edgecolor='black',facecolor='white')
@@ -85,10 +85,10 @@ for i,ep in enumerate([0.5, 1]):
 for i,ep in enumerate([0.5, 1]):
     if i==0:
         ax2.loglog(Ngamma_range,explicit_offsurf[:,i],styles_KSmethod[i],markersize=14,linewidth=2,color='tab:orange',
-            label=('Explicit method ($\pm${})'.format(ep/100)))
+            label=('Hicken \& Kaur ($\pm${})'.format(ep/100)))
     elif i==1:
         ax2.loglog(Ngamma_range,explicit_offsurf[:,i],styles_KSmethod[i],markersize=7,linewidth=2,color='tab:orange',
-            label=('Explicit method ($\pm${})'.format(ep/100)))
+            label=('Hicken \& Kaur ($\pm${})'.format(ep/100)))
 ax2.set_xlabel('$N_{\Gamma}$',fontsize=14)
 ax2.set_ylabel('Off-surface RMS error',fontsize=14)
 ax2.set_ylim(1e-4,2e-2)
