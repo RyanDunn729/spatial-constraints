@@ -9,12 +9,13 @@ import openmdao.api as om
 import numpy as np
 import pickle
 import time
+import scipy.sparse as sps
 print('Imported Packages \n')
 
 ######### Configurables #########
 dim = 2
 order = 4
-max_cps = 46
+max_cps = 200
 
 Lp = 1e0
 Ln = 1e0
@@ -36,12 +37,12 @@ custom_dimensions = np.array([
     [-4.,4.],
     [-5.6,5.6]])
 
-# centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
-# radii = [2.,2.,4.,3.]
-# e = multi_circle(centers,radii)
-# custom_dimensions = np.array([
-#     [-18.,18.],
-#     [-9,6]])
+centers = [[-13.,-0.5],[-7.,2.],[2.,0.],[10.,-4.]]
+radii = [2.,2.,4.,3.]
+e = multi_circle(centers,radii)
+custom_dimensions = np.array([
+    [-18.,18.],
+    [-9,6]])
 
 num_exact = 10000
 pts = e.points(num_surf_pts)
@@ -83,26 +84,27 @@ if visualize_init:
     plt.show()
     exit()
 #################################
-A0 = Func.get_basis(loc='surf',du=0,dv=0).toarray()
-Ax = scaling[0]*Func.get_basis(loc='surf',du=1,dv=0).toarray()
-Ay = scaling[1]*Func.get_basis(loc='surf',du=0,dv=1).toarray()
-Axx = scaling[0]*scaling[0]*Func.get_basis(loc='hess',du=2,dv=0).toarray()
-Axy = scaling[0]*scaling[1]*Func.get_basis(loc='hess',du=1,dv=1).toarray()
-Ayy = scaling[1]*scaling[1]*Func.get_basis(loc='hess',du=0,dv=2).toarray()
+A0 = Func.get_basis(loc='surf',du=0,dv=0)
+Ax = scaling[0]*Func.get_basis(loc='surf',du=1,dv=0)
+Ay = scaling[1]*Func.get_basis(loc='surf',du=0,dv=1)
+Axx = scaling[0]*scaling[0]*Func.get_basis(loc='hess',du=2,dv=0)
+Axy = scaling[0]*scaling[1]*Func.get_basis(loc='hess',du=1,dv=1)
+Ayy = scaling[1]*scaling[1]*Func.get_basis(loc='hess',du=0,dv=2)
 
 from numpy import newaxis as na
-nx = normals[na,:,0]
-ny = normals[na,:,1]
+nx = normals[np.newaxis,:,0]
+ny = normals[np.newaxis,:,1]
 
-An = np.transpose(Ax)@Ax + np.transpose(Ay)@Ay
-Ar = np.transpose(Axx)@Axx + 2*np.transpose(Axy)@Axy + np.transpose(Ayy)@Ayy
+Ap = A0.T@A0
+An = Ax.T@Ax + Ay.T@Ay
+Ar = Axx.T@Axx + 2*Axy.T@Axy + Ayy.T@Ayy
 
-A = Lp/num_surf_pts * (np.transpose(A0)@A0)
-A += Ln/num_surf_pts * (An)
-A += Lr/num_hess_pts * (Ar)
+A = Lp/num_surf_pts * Ap
+A += Ln/num_surf_pts * An
+A += Lr/num_hess_pts * Ar
 
 b = Ln/num_surf_pts * (nx@Ax + ny@Ay)
-phi_QP = np.linalg.solve(A,-b.flatten())
+phi_QP, info = sps.linalg.cg(A,-b.flatten(),x0=phi_init)
 #################################
 Func.set_cps(phi_QP)
 pickle.dump(Func, open( "_Saved_Function.pkl","wb"))
