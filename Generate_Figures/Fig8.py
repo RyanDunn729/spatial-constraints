@@ -3,12 +3,14 @@ import seaborn as sns
 import numpy as np
 import pickle
 
-def set_fonts(legendfont=12,axesfont=16):
+def set_fonts(legendfont=16,axesfont=16):
     from matplotlib import rc
     rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     rc('text', usetex=True)
     plt.rc('legend', fontsize=legendfont)    # legend fontsize
     plt.rc('axes', labelsize=axesfont)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=legendfont)
+    plt.rc('ytick', labelsize=legendfont)
     return
 
 data = pickle.load(open("fig8_data.pkl","rb"))

@@ -6,6 +6,21 @@ import seaborn as sns
 import numpy as np
 import pickle
 
+def set_fonts(legendfont=16,axesfont=16):
+    from matplotlib import rc
+    rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
+    rc('text', usetex=True)
+    plt.rc('legend', fontsize=legendfont)    # legend fontsize
+    plt.rc('axes', labelsize=axesfont)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=legendfont)
+    plt.rc('ytick', labelsize=legendfont)
+    return
+set_fonts()
+tickfontsize = 16
+axisfontsize = 16
+linewidth = 2.5
+contour_alpha = 0.30
+
 ### Load in data
 data = pickle.load(open("fig3_data.pkl","rb"))
 xx = data["xx"]
@@ -35,16 +50,6 @@ box3 = np.array([[-0.5,-1.5],
 dimensions = np.array([[-4.,4.],
                        [-5.6,5.6]])
 legend_anchor = (1.1, 1.05)
-contour_alpha = 0.30
-tickfontsize = 14
-axisfontsize = 16
-
-def set_fonts():
-    from matplotlib import rc
-    rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
-    rc('text', usetex=True)
-    plt.rc('legend', fontsize=tickfontsize)    # legend fontsize
-    plt.rc('axes', labelsize=axisfontsize)    # fontsize of the x and y labels
 
 ### loop over both figures
 for i,phi in enumerate([phi_init, phi_energy_minimized]):
@@ -52,31 +57,31 @@ for i,phi in enumerate([phi_init, phi_energy_minimized]):
     set_fonts()
     fig = plt.figure(figsize=(7,5),dpi=140)
     ax = plt.axes()
-    ax.plot(box1[:,0],box1[:,1],'k-',label='Boundary $\Gamma$',linewidth=1)
+    ax.plot(box1[:,0],box1[:,1],'k-',label='Boundary $\Gamma$',linewidth=linewidth-1)
     rect = patches.FancyBboxPatch((-3.5,-4.5), 7,9, boxstyle='round,pad=0,rounding_size=1', 
-        linewidth=1.5, alpha=contour_alpha,edgecolor='k',facecolor='none')
+        linewidth=linewidth, alpha=contour_alpha,edgecolor='k',facecolor='none')
     ax.add_patch(rect)
-    ax.plot(box2[:,0],box2[:,1],'k-',alpha=contour_alpha,linewidth=1.5,label='Contours of $d_\Gamma$')
-    ax.plot(box3[:,0],box3[:,1],'k-',alpha=contour_alpha,linewidth=1.5)
+    ax.plot(box2[:,0],box2[:,1],'k-',alpha=contour_alpha,linewidth=linewidth,label='Contours of $d_\Gamma$')
+    ax.plot(box3[:,0],box3[:,1],'k-',alpha=contour_alpha,linewidth=linewidth)
     ax.plot(pt_cloud[:,0],pt_cloud[:,1],'k.',markersize=5,label='Point cloud')
-    CS = ax.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
+    CS = ax.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=linewidth,
         colors=['tab:orange','tab:green','tab:blue','tab:purple'])
-    ax.clabel(CS, CS.levels, inline=True, fontsize=axisfontsize, fmt={-1:'-1',0:'0',1:'1',2:'2'},
+    ax.clabel(CS, CS.levels, inline=True, fontsize=axisfontsize+2, fmt={-1:'-1',0:'0',1:'1',2:'2'},
         inline_spacing=18, rightside_up=True,
         manual=[(-4,0),(-3,0),(-2,0),(-1,0)])
     ax.set_xlabel('x')
     ax.set_ylabel('y')
-    plt.xticks(np.arange(-4,5,1),fontsize=tickfontsize)
-    plt.yticks(np.arange(-4,5,1),fontsize=tickfontsize)
+    plt.xticks(np.arange(-4,5,2),fontsize=tickfontsize)
+    plt.yticks(np.arange(-4,5,2),fontsize=tickfontsize)
     ax.set_xlim(1.25*dimensions[0,0], 2.5*dimensions[0,1])
     ax.set_ylim(dimensions[1,0], dimensions[1,1])
 
     sns.despine()
 
     axins = zoomed_inset_axes(ax, 5, loc=5)
-    axins.plot(box1[:,0],box1[:,1],'k-',linewidth=1)
+    axins.plot(box1[:,0],box1[:,1],'k-',linewidth=linewidth-1)
     axins.plot(pt_cloud[:,0],pt_cloud[:,1],'k.',markersize=10)
-    axins.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=2,
+    axins.contour(xx,yy,phi,linestyles='dashed',levels=[-1,0,1,2],linewidths=linewidth,
         colors=['tab:orange','tab:green','tab:blue','tab:purple'])
     axins.set_xlim(2, 2.75)
     axins.set_ylim(-3.75, -3)
